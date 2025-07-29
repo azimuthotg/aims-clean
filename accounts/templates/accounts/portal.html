@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Portal - Academic Information Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3">ยินดีต้อนรับ, {{ user.get_full_name|default:user.username }}</h1>
+            <p class="text-muted">โปรดเลือกระบบที่ต้องการใช้งาน</p>
+        </div>
+    </div>
+    
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <!-- SmartForm Card -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-alt fa-4x mb-3 text-primary"></i>
+                    <h5 class="card-title">SmartForm</h5>
+                    <p class="card-text">ระบบจัดการเอกสารอิเล็กทรอนิกส์ สำหรับบันทึกและติดตามเอกสารต่างๆ</p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="d-grid">
+                        <a href="#" class="btn btn-primary">เข้าใช้งาน</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dashboard Card -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-tachometer-alt fa-4x mb-3 text-success"></i>
+                    <h5 class="card-title">Dashboard</h5>
+                    <p class="card-text">ระบบรายงานและแสดงผลข้อมูลสรุปสำหรับผู้บริหารและเจ้าหน้าที่123456</p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="d-grid">
+                        <a href="{% url 'dashboard:home' %}" class="btn btn-success">เข้าใช้งาน</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reports Card -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-bar fa-4x mb-3 text-warning"></i>
+                    <h5 class="card-title">Reports</h5>
+                    <p class="card-text">ระบบรายงานเชิงวิเคราะห์และสถิติข้อมูลต่างๆ</p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="d-grid">
+                        <a href="#" class="btn btn-warning">เข้าใช้งาน</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

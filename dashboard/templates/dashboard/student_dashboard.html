@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}ข้อมูลนักศึกษา - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3">Dashboard ข้อมูลนักศึกษา</h1>
+            <p class="text-muted">แสดงข้อมูลสถิติและการวิเคราะห์นักศึกษาทั้งหมดของมหาวิทยาลัยนครพนม</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'dashboard:home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i> กลับไปหน้าหลัก
+            </a>
+        </div>
+    </div>
+    
+    <!-- แถวแรก: การ์ดสรุปตัวเลข -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">นักศึกษาทั้งหมด</h6>
+                            <h2 class="mb-0">{{ total_students }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-user-graduate fa-3x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- แถวที่สอง: กราฟแท่ง/วงกลม -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title">จำนวนนักศึกษาตามคณะ (10 อันดับแรก)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="facultyChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title">สัดส่วนนักศึกษาตามเพศ</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="genderChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- แถวที่สาม: กราฟแท่งและระดับการศึกษา -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title">จำนวนนักศึกษาตามปีที่เข้าศึกษา</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="yearChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title">สัดส่วนตามระดับการศึกษา</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="levelChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- แถวที่สี่: ตาราง -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">จำนวนนักศึกษาตามคณะ</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>คณะ</th>
+                                    <th class="text-end">จำนวน</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fac in faculties %}
+                                <tr>
+                                    <td>{{ fac.faculty_name|default:"ไม่ระบุ" }}</td>
+                                    <td class="text-end">{{ fac.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">จำนวนนักศึกษาตามสาขา</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>สาขาวิชา</th>
+                                    <th class="text-end">จำนวน</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prog in programs %}
+                                <tr>
+                                    <td>{{ prog.program_name|default:"ไม่ระบุ" }}</td>
+                                    <td class="text-end">{{ prog.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // ข้อมูลสำหรับกราฟแท่งแสดงนักศึกษาตามคณะ
+    var facultyLabels = {{ faculty_labels|safe }};
+    var facultyData = {{ faculty_data|safe }};
+    
+    // ข้อมูลสำหรับกราฟวงกลมแสดงสัดส่วนนักศึกษาตามเพศ
+    var genderLabels = {{ gender_labels|safe }};
+    var genderData = {{ gender_data|safe }};
+    
+    // ข้อมูลสำหรับกราฟวงกลมแสดงสัดส่วนนักศึกษาตามระดับการศึกษา
+    var levelLabels = {{ level_labels|safe }};
+    var levelData = {{ level_data|safe }};
+    
+    // ข้อมูลสำหรับกราฟแท่งแสดงนักศึกษาตามปีที่เข้าศึกษา
+    var yearLabels = {{ year_labels|safe }};
+    var yearData = {{ year_data|safe }};
+    
+    // สร้างกราฟแท่งสำหรับข้อมูลตามคณะ
+    var facultyCtx = document.getElementById('facultyChart').getContext('2d');
+    var facultyChart = new Chart(facultyCtx, {
+        type: 'bar',
+        data: {
+            labels: facultyLabels,
+            datasets: [{
+                label: 'จำนวนนักศึกษา',
+                data: facultyData,
+                backgroundColor: 'rgba(40, 167, 69, 0.5)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // สร้างกราฟวงกลมสำหรับสัดส่วนนักศึกษาตามเพศ
+    var genderCtx = document.getElementById('genderChart').getContext('2d');
+    var genderChart = new Chart(genderCtx, {
+        type: 'pie',
+        data: {
+            labels: genderLabels,
+            datasets: [{
+                data: genderData,
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',  // สีสำหรับชาย
+                    'rgba(255, 99, 132, 0.7)',  // สีสำหรับหญิง
+                    'rgba(255, 206, 86, 0.7)'   // สีสำหรับไม่ระบุ
+                ],
+                borderWidth: 1
+            }]
+        }
+    });
+    
+    // สร้างกราฟวงกลมสำหรับสัดส่วนนักศึกษาตามระดับการศึกษา
+    var levelCtx = document.getElementById('levelChart').getContext('2d');
+    var levelChart = new Chart(levelCtx, {
+        type: 'pie',
+        data: {
+            labels: levelLabels,
+            datasets: [{
+                data: levelData,
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.7)',
+                    'rgba(23, 162, 184, 0.7)',
+                    'rgba(255, 193, 7, 0.7)',
+                    'rgba(220, 53, 69, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        }
+    });
+    
+    // สร้างกราฟแท่งสำหรับนักศึกษาตามปีที่เข้าศึกษา
+    var yearCtx = document.getElementById('yearChart').getContext('2d');
+    var yearChart = new Chart(yearCtx, {
+        type: 'bar',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'จำนวนนักศึกษา',
+                data: yearData,
+                backgroundColor: 'rgba(23, 162, 184, 0.5)',
+                borderColor: 'rgba(23, 162, 184, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

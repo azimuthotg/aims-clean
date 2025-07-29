@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}ข้อผิดพลาด - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-6 mx-auto text-center">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">เกิดข้อผิดพลาด!</h4>
+                <p>{{ error_message }}</p>
+            </div>
+            <a href="{% url 'dashboard:home' %}" class="btn btn-primary">กลับไปหน้าหลัก</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
