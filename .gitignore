@@ -4,4 +4,7 @@ credentials/
 __pycache__/
 *.pyc
 .env.local
-config.json
+config.jsonaims_env/ 
+venv/ 
+env/ 
+ENV/ 
