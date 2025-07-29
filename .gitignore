@@ -1,4 +1,5 @@
 credentials/ 
+capture/
 *.json 
 .env 
 __pycache__/
