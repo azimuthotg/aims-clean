@@ -31,8 +31,8 @@ cd aims_project
 ## 3. สร้าง Virtual Environment
 
 ```cmd
-python -m venv venv
-venv\Scripts\activate
+python -m venv aims_env
+aims_env\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install waitress
@@ -108,16 +108,16 @@ python waitress_server.py
 ### แก้ไข paths ใน `deploy/install_service.bat`:
 
 ```bat
-set PROJECT_DIR=C:\projects\aims_project
-set PYTHON_PATH=C:\projects\aims_project\venv\Scripts\python.exe
-set SCRIPT_PATH=C:\projects\aims_project\waitress_server.py
+set PROJECT_DIR=C:\inetpub\wwwroot\aims
+set PYTHON_PATH=C:\inetpub\wwwroot\aims\aims_env\Scripts\python.exe
+set SCRIPT_PATH=C:\inetpub\wwwroot\aims\waitress_server.py
 set NSSM_PATH=C:\nssm\nssm.exe
 ```
 
 ### รัน install script (ต้องรันด้วย Administrator):
 
 ```cmd
-cd C:\projects\aims_project\deploy
+cd C:\inetpub\wwwroot\aims\deploy
 install_service.bat
 ```
 
@@ -147,13 +147,13 @@ deploy\manage_service.bat
 ## 8. ตรวจสอบ Log Files
 
 Log files อยู่ที่:
-- `C:\projects\aims_project\logs\aims_stdout.log`
-- `C:\projects\aims_project\logs\aims_stderr.log`
+- `C:\inetpub\wwwroot\aims\logs\aims_stdout.log`
+- `C:\inetpub\wwwroot\aims\logs\aims_stderr.log`
 
 ### ดู log แบบ real-time:
 
 ```powershell
-Get-Content "C:\projects\aims_project\logs\aims_stdout.log" -Wait -Tail 50
+Get-Content "C:\inetpub\wwwroot\aims\logs\aims_stdout.log" -Wait -Tail 50
 ```
 
 ---
@@ -161,7 +161,7 @@ Get-Content "C:\projects\aims_project\logs\aims_stdout.log" -Wait -Tail 50
 ## 9. อัพเดทโค้ด
 
 ```cmd
-cd C:\projects\aims_project
+cd C:\inetpub\wwwroot\aims
 
 REM หยุด service
 nssm stop AIMS-Dashboard
@@ -170,7 +170,7 @@ REM Pull โค้ดใหม่
 git pull origin main
 
 REM เปิด virtual environment
-venv\Scripts\activate
+aims_env\Scripts\activate
 
 REM ติดตั้ง dependencies ใหม่ (ถ้ามี)
 pip install -r requirements.txt

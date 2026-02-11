@@ -12,10 +12,10 @@ set SERVICE_NAME=AIMS-Dashboard
 set DISPLAY_NAME=AIMS Dashboard Service
 set DESCRIPTION=Academic Information Management System - Django Web Application
 
-REM === Paths (แก้ไขตาม server จริง) ===
-set PROJECT_DIR=C:\projects\aims_project
-set PYTHON_PATH=C:\projects\aims_project\venv\Scripts\python.exe
-set SCRIPT_PATH=C:\projects\aims_project\waitress_server.py
+REM === Paths (Production Server) ===
+set PROJECT_DIR=C:\inetpub\wwwroot\aims
+set PYTHON_PATH=C:\inetpub\wwwroot\aims\aims_env\Scripts\python.exe
+set SCRIPT_PATH=C:\inetpub\wwwroot\aims\waitress_server.py
 set NSSM_PATH=C:\nssm\nssm.exe
 
 REM === Log files ===

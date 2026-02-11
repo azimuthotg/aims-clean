@@ -81,13 +81,13 @@ goto menu
 :logs
 echo.
 echo [INFO] Log files location:
-echo   - C:\projects\aims_project\logs\aims_stdout.log
-echo   - C:\projects\aims_project\logs\aims_stderr.log
+echo   - C:\inetpub\wwwroot\aims\logs\aims_stdout.log
+echo   - C:\inetpub\wwwroot\aims\logs\aims_stderr.log
 echo.
 echo [INFO] แสดง 30 บรรทัดล่าสุดของ stdout log:
 echo ----------------------------------------
-if exist "C:\projects\aims_project\logs\aims_stdout.log" (
-    powershell -command "Get-Content 'C:\projects\aims_project\logs\aims_stdout.log' -Tail 30"
+if exist "C:\inetpub\wwwroot\aims\logs\aims_stdout.log" (
+    powershell -command "Get-Content 'C:\inetpub\wwwroot\aims\logs\aims_stdout.log' -Tail 30"
 ) else (
     echo ไม่พบไฟล์ log
 )
