@@ -12,7 +12,7 @@ def get_db_connection():
             host=os.getenv('API_DB_HOST', '202.29.55.213'),
             database=os.getenv('API_DB_NAME', 'api'),
             user=os.getenv('API_DB_USER', 'admin_e'),
-            password=os.getenv('API_DB_PASSWORD', 'REMOVED_PASSWORD'),
+            password=os.getenv('API_DB_PASSWORD', ''),
             ssl_disabled=True  # Fix SSL wrap_socket error
         )
         return connection
