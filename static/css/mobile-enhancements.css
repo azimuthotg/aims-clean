@@ -1,0 +1,365 @@
+/* ===== MOBILE EXPERIENCE ENHANCEMENTS ===== */
+/* Additional CSS for better mobile experience */
+
+/* Skeleton Loading States */
+.skeleton-loader {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.skeleton-chart {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.skeleton-legend {
+    width: 100%;
+}
+
+.skeleton-legend > div {
+    height: 16px;
+    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Enhanced Error States */
+.error-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    background: #fff5f5;
+    border: 2px dashed #feb2b2;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.error-state-icon {
+    font-size: 3rem;
+    color: #e53e3e;
+    margin-bottom: 16px;
+    animation: pulse 2s infinite;
+}
+
+.error-state h5 {
+    color: #e53e3e;
+    margin-bottom: 8px;
+}
+
+.error-state p {
+    color: #c53030;
+    margin-bottom: 16px;
+}
+
+/* Mobile-First Chart Export Buttons */
+@media (max-width: 768px) {
+    .chart-export-buttons {
+        position: relative;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e3e6f0;
+    }
+    
+    .chart-export-buttons .btn-group {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .chart-export-buttons .btn {
+        border: 1px solid #dee2e6;
+        background: white;
+        color: #495057;
+        transition: all 0.2s ease;
+    }
+    
+    .chart-export-buttons .btn:hover,
+    .chart-export-buttons .btn:focus {
+        background: #2563eb;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+    }
+    
+    .chart-export-buttons .btn:active {
+        transform: translateY(0);
+    }
+}
+
+/* Touch-friendly Interactive Elements */
+@media (hover: none) and (pointer: coarse) {
+    .table-responsive td.faculty-name a,
+    .table-responsive td.program-name a {
+        padding: 12px 8px;
+        margin: -8px -4px;
+        border-radius: 6px;
+        transition: background-color 0.2s ease;
+        display: block;
+    }
+    
+    .table-responsive td.faculty-name a:active,
+    .table-responsive td.program-name a:active {
+        background-color: rgba(37, 99, 235, 0.1);
+    }
+}
+
+/* Mobile Table Improvements */
+@media (max-width: 768px) {
+    .table-responsive {
+        position: relative;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+    
+    .table-responsive::after {
+        content: "⬅ เลื่อนซ้ายขวาเพื่อดูข้อมูลเพิ่มเติม";
+        position: absolute;
+        bottom: -24px;
+        right: 0;
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .table-responsive::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #2563eb;
+        border-radius: 3px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #1d4ed8;
+    }
+}
+
+/* Enhanced Progress Bars for Mobile */
+@media (max-width: 768px) {
+    .progress {
+        position: relative;
+        overflow: visible;
+    }
+    
+    .progress-bar {
+        position: relative;
+    }
+    
+    .progress-bar::after {
+        content: attr(aria-valuenow) "%";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+}
+
+/* Mobile Card Enhancements */
+@media (max-width: 768px) {
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);
+    }
+    
+    .card-header {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .card-body {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+/* Mobile Badge Improvements */
+@media (max-width: 768px) {
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        line-height: 1;
+        font-weight: 600;
+    }
+    
+    .badge.fs-6 {
+        font-size: 0.75rem !important;
+        padding: 6px 10px;
+    }
+}
+
+/* Loading Spinner Enhancements */
+.spinner-border.chart-pulse {
+    width: 3rem;
+    height: 3rem;
+    color: #2563eb;
+}
+
+.chart-loading .spinner-border {
+    margin-bottom: 16px;
+}
+
+.chart-loading::after {
+    content: "กำลังโหลดข้อมูล...";
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Dark Mode Adjustments for Mobile */
+[data-theme="dark"] .skeleton-chart,
+[data-theme="dark"] .skeleton-legend > div {
+    background: linear-gradient(90deg, #404040 25%, #505050 50%, #404040 75%);
+    background-size: 200% 100%;
+}
+
+[data-theme="dark"] .error-state {
+    background: #2d1b1b;
+    border-color: #7c3030;
+}
+
+[data-theme="dark"] .chart-export-buttons {
+    background: rgba(45, 45, 45, 0.95);
+}
+
+[data-theme="dark"] .chart-export-buttons .btn {
+    background: #404040;
+    color: #ffffff;
+    border-color: #505050;
+}
+
+/* Utility Classes for Mobile */
+@media (max-width: 768px) {
+    .mobile-hidden {
+        display: none !important;
+    }
+    
+    .mobile-only {
+        display: block !important;
+    }
+    
+    .mobile-text-sm {
+        font-size: 0.875rem !important;
+    }
+    
+    .mobile-text-xs {
+        font-size: 0.75rem !important;
+    }
+    
+    .mobile-p-2 {
+        padding: 0.5rem !important;
+    }
+    
+    .mobile-p-3 {
+        padding: 1rem !important;
+    }
+    
+    .mobile-mb-3 {
+        margin-bottom: 1rem !important;
+    }
+}
+
+/* Non-mobile utility classes */
+@media (min-width: 769px) {
+    .mobile-hidden {
+        display: block !important;
+    }
+    
+    .mobile-only {
+        display: none !important;
+    }
+}
+
+/* Animation for better mobile experience */
+@media (max-width: 768px) {
+    .card:hover {
+        transform: none; /* Disable hover transform on mobile */
+    }
+    
+    .card:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+    
+    .btn:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 768px) {
+    .sr-only-mobile {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    
+    /* Show screen reader text on focus */
+    .sr-only-mobile:focus {
+        position: static;
+        width: auto;
+        height: auto;
+        padding: 4px 8px;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        background: #2563eb;
+        color: white;
+        border-radius: 4px;
+    }
+}

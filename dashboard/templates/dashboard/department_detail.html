@@ -1,0 +1,548 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ department_name }} - รายละเอียดหน่วยงาน{% endblock %}
+
+{% block content %}
+    
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-8">
+                    <h1 class="m-0">{{ department_name }}</h1>
+                    <p class="text-muted">รายละเอียดข้อมูลบุคลากรในหน่วยงาน</p>
+                </div>
+                <div class="col-sm-4">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/executive/">หน้าหลัก</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:staff' %}">ข้อมูลบุคลากร</a></li>
+                        <li class="breadcrumb-item active">{{ department_name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="small-box bg-gradient-primary">
+                <div class="inner">
+                    <h3>{{ total_staff|intcomma }}</h3>
+                    <p>บุคลากรทั้งหมด</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="small-box-footer">ในหน่วยงานนี้ <i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6">
+            <div class="small-box bg-gradient-success">
+                <div class="inner">
+                    <h3>{{ position_distribution|length }}</h3>
+                    <p>ตำแหน่งงานที่แตกต่าง</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="small-box-footer">ความหลากหลาย <i class="fas fa-chart-pie"></i></div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="small-box bg-gradient-info">
+                <div class="inner">
+                    <h3>{{ employment_type_distribution|length }}</h3>
+                    <p>ประเภทการจ้าง</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="small-box-footer">ความหลากหลาย <i class="fas fa-chart-pie"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <!-- Row 1: Gender and Employment Type (6md each) -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        สัดส่วนตามเพศ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="genderChart" style="height: 300px;"></div>
+                    
+                    <!-- Gender Summary -->
+                    <div class="mt-3">
+                        <h6>สรุปตามเพศ:</h6>
+                        {% for gender in gender_distribution %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>{{ gender.GENDERNAMETH|default:"ไม่ระบุ" }}</span>
+                            <span class="badge bg-info">{{ gender.count|intcomma }} คน ({% widthratio gender.count total_staff 100 %}%)</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-donut me-2"></i>
+                        สัดส่วนประเภทการจ้าง
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="employmentTypeChart" style="height: 300px;"></div>
+                    
+                    <!-- Employment Type Summary -->
+                    <div class="mt-3">
+                        <h6>สรุปประเภทการจ้าง:</h6>
+                        {% for emp in employment_type_distribution %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>{{ emp.STFTYPENAME|default:"ไม่ระบุ" }}</span>
+                            <span class="badge bg-warning text-dark">{{ emp.count|intcomma }} คน ({% widthratio emp.count total_staff 100 %}%)</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Row 2: All Positions Chart (12md) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        ตำแหน่งงานทั้งหมด ({{ position_distribution|length }} ตำแหน่ง)
+                    </h5>
+                    <a href="{% url 'dashboard:export_department_excel' department_name %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-file-excel me-1"></i> Export Excel
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="positionChart" style="height: 400px;"></div>
+                    
+                    <!-- All Positions Summary Table -->
+                    <div class="mt-4">
+                        <h6>สรุปตำแหน่งงานทั้งหมด:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th width="8%">อันดับ</th>
+                                        <th>ตำแหน่งงาน</th>
+                                        <th class="text-end" width="15%">จำนวน</th>
+                                        <th class="text-center" width="15%">สัดส่วน</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pos in position_distribution %}
+                                    <tr>
+                                        <td class="text-center">
+                                            <span class="badge bg-success">{{ forloop.counter }}</span>
+                                        </td>
+                                        <td>{{ pos.POSNAMETH|default:"ไม่ระบุ" }}</td>
+                                        <td class="text-end">
+                                            <span class="fw-bold">{{ pos.count|intcomma }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="text-success fw-bold">{% widthratio pos.count total_staff 100 %}%</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff List Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        รายชื่อบุคลากรทั้งหมด ({{ total_staff }} คน)
+                    </h5>
+                    <a href="{% url 'dashboard:export_department_excel' department_name %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-file-excel me-1"></i> Export Excel
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th width="8%">ลำดับ</th>
+                                    <th width="25%">ชื่อ-นามสกุล</th>
+                                    <th width="10%">เพศ</th>
+                                    <th width="35%">ตำแหน่ง</th>
+                                    <th width="22%">ประเภทการจ้าง</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for staff in staff_list %}
+                                <tr>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">{{ forloop.counter }}</span>
+                                    </td>
+                                    <td>
+                                        {{ staff.PREFIXFULLNAME|default:"" }} {{ staff.STAFFNAME|default:"" }} {{ staff.STAFFSURNAME|default:"" }}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if staff.GENDERNAMETH == 'ชาย' %}
+                                            <span class="badge bg-info">{{ staff.GENDERNAMETH }}</span>
+                                        {% elif staff.GENDERNAMETH == 'หญิง' %}
+                                            <span class="badge bg-warning">{{ staff.GENDERNAMETH }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">ไม่ระบุ</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ staff.POSNAMETH|default:"ไม่ระบุ" }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ staff.STFTYPENAME|default:"ไม่ระบุ" }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ข้อมูลสำหรับกราฟ
+    const genderLabels = {{ gender_labels|safe }};
+    const genderData = {{ gender_data|safe }};
+    const positionLabels = {{ position_labels|safe }};
+    const positionData = {{ position_data|safe }};
+    const employmentTypeLabels = {{ employment_type_labels|safe }};
+    const employmentTypeData = {{ employment_type_data|safe }};
+    
+    // กราฟโดนัท - สัดส่วนบุคลากรตามเพศ
+    if (genderLabels.length > 0) {
+        const genderOptions = {
+            series: genderData,
+            chart: {
+                type: 'donut',
+                height: 250,
+                toolbar: { show: false }
+            },
+            labels: genderLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวมทั้งหมด',
+                                formatter: function (w) {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val, opts) {
+                    const value = opts.w.config.series[opts.seriesIndex];
+                    return value.toLocaleString();
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val.toLocaleString() + ' คน';
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                fontSize: '14px'
+            },
+            colors: ['#2563eb', '#dc2626', '#d97706']
+        };
+        
+        const genderChart = new ApexCharts(document.querySelector("#genderChart"), genderOptions);
+        genderChart.render();
+    }
+    
+    // กราฟโดนัท - ประเภทการจ้าง
+    if (employmentTypeLabels.length > 0) {
+        const employmentTypeOptions = {
+            series: employmentTypeData,
+            chart: {
+                type: 'donut',
+                height: 250,
+                toolbar: { show: false }
+            },
+            labels: employmentTypeLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวม',
+                                formatter: function (w) {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val, opts) {
+                    const value = opts.w.config.series[opts.seriesIndex];
+                    return value.toLocaleString();
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val.toLocaleString() + ' คน';
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                fontSize: '12px'
+            },
+            colors: ['#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16']
+        };
+        
+        const employmentTypeChart = new ApexCharts(document.querySelector("#employmentTypeChart"), employmentTypeOptions);
+        employmentTypeChart.render();
+    }
+    
+    // กราฟแท่ง - จำนวนบุคลากรตามตำแหน่ง (แสดงทั้งหมด)
+    if (positionLabels.length > 0) {
+        // คำนวณความสูงแบบ Dynamic ตามจำนวนตำแหน่ง
+        const baseHeight = 300;                    // ความสูงพื้นฐาน
+        const heightPerItem = 28;                  // ความสูงต่อตำแหน่ง 1 ตัว
+        const minHeight = 350;                     // ความสูงต่ำสุด
+        const maxHeight = 900;                     // ความสูงสูงสุด
+        const dynamicHeight = Math.min(maxHeight, Math.max(minHeight, positionLabels.length * heightPerItem + baseHeight));
+        
+        // กำหนดขนาดพื้นที่ Y-axis ตามจำนวนข้อมูล
+        let yAxisWidth = '35%';  // default
+        if (positionLabels.length <= 8) {
+            yAxisWidth = '30%';      // หน่วยงานเล็ก
+        } else if (positionLabels.length <= 15) {
+            yAxisWidth = '35%';      // หน่วยงานกลาง  
+        } else {
+            yAxisWidth = '40%';      // หน่วยงานใหญ่
+        }
+        
+        console.log(`📊 Dynamic Chart: ${positionLabels.length} positions, height: ${dynamicHeight}px, yAxis: ${yAxisWidth}`);
+        
+        const positionOptions = {
+            series: [{
+                name: 'จำนวนคน',
+                data: positionData
+            }],
+            chart: {
+                type: 'bar',
+                height: dynamicHeight,
+                toolbar: {
+                    show: false
+                }
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 6,
+                    horizontal: true,
+                    distributed: true,
+                    barHeight: positionLabels.length <= 8 ? '65%' : positionLabels.length <= 15 ? '75%' : '85%'
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    colors: ['#fff'],
+                    fontSize: positionLabels.length <= 8 ? '13px' : positionLabels.length <= 15 ? '12px' : '11px',
+                    fontWeight: 'bold'
+                },
+                formatter: function(val) {
+                    return val.toLocaleString() + ' คน';
+                }
+            },
+            xaxis: {
+                categories: positionLabels,
+                title: {
+                    text: 'จำนวนบุคลากร (คน)',
+                    style: {
+                        fontSize: '14px',
+                        fontWeight: '600'
+                    }
+                },
+                labels: {
+                    style: {
+                        fontSize: positionLabels.length <= 8 ? '12px' : '11px'
+                    },
+                    formatter: function(val) {
+                        return val.toLocaleString();
+                    },
+                    maxWidth: positionLabels.length <= 8 ? 120 : positionLabels.length <= 15 ? 100 : 80
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'ตำแหน่งงาน',
+                    style: {
+                        fontSize: '14px',
+                        fontWeight: '600'
+                    }
+                },
+                labels: {
+                    style: {
+                        fontSize: positionLabels.length <= 8 ? '14px' : positionLabels.length <= 15 ? '13px' : '12px',
+                        fontWeight: '500'
+                    },
+                    maxWidth: positionLabels.length <= 8 ? 180 : positionLabels.length <= 15 ? 200 : 220,
+                    formatter: function(val) {
+                        // ตัดคำที่ยาวเกินไป - ปรับตามขนาดหน่วยงาน
+                        let maxLength = 35;
+                        if (positionLabels.length <= 8) {
+                            maxLength = 40;    // หน่วยงานเล็ก - ให้แสดงชื่อยาวกว่า
+                        } else if (positionLabels.length <= 15) {
+                            maxLength = 35;    // หน่วยงานกลาง
+                        } else {
+                            maxLength = 30;    // หน่วยงานใหญ่ - ตัดสั้นลง
+                        }
+                        
+                        if (val.length > maxLength) {
+                            return val.substring(0, maxLength - 3) + '...';
+                        }
+                        return val;
+                    }
+                }
+            },
+            grid: {
+                show: true,
+                borderColor: '#e0e6ed',
+                strokeDashArray: 5,
+                xaxis: {
+                    lines: {
+                        show: true
+                    }
+                },
+                yaxis: {
+                    lines: {
+                        show: false
+                    }
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val.toLocaleString() + ' คน';
+                    }
+                },
+                x: {
+                    formatter: function(val) {
+                        return val; // แสดงชื่อตำแหน่งเต็ม
+                    }
+                }
+            },
+            title: {
+                text: 'การกระจายตำแหน่งงานในหน่วยงาน',
+                align: 'center',
+                style: {
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    color: '#059669'
+                }
+            },
+            colors: ['#059669'],
+            responsive: [{
+                breakpoint: 1024,
+                options: {
+                    chart: {
+                        height: Math.max(300, dynamicHeight * 0.8)  // ลดความสูงบน tablet
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                fontSize: '12px'
+                            },
+                            maxWidth: 160
+                        }
+                    }
+                }
+            }, {
+                breakpoint: 768,
+                options: {
+                    chart: {
+                        height: Math.max(250, dynamicHeight * 0.6)  // ลดความสูงบนมือถือ
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                fontSize: '11px'
+                            },
+                            maxWidth: 130,
+                            formatter: function(val) {
+                                // ตัดสั้นลงบนมือถือ
+                                if (val.length > 20) {
+                                    return val.substring(0, 17) + '...';
+                                }
+                                return val;
+                            }
+                        }
+                    },
+                    xaxis: {
+                        labels: {
+                            style: {
+                                fontSize: '10px'
+                            }
+                        }
+                    }
+                }
+            }]
+        };
+        
+        const positionChart = new ApexCharts(document.querySelector("#positionChart"), positionOptions);
+        positionChart.render();
+    }
+    
+    console.log('✅ Department Detail Dashboard loaded successfully for: {{ department_name }}');
+});
+</script>
+{% endblock %}

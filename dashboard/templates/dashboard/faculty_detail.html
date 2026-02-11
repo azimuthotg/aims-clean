@@ -1,0 +1,707 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ faculty_name }} - รายละเอียดคณะ{% endblock %}
+
+{% block content %}
+    
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-8">
+                    <h1 class="m-0">{{ faculty_name }}</h1>
+                    <p class="text-muted">รายละเอียดข้อมูลนักศึกษาในคณะ - {{ year_filter_label }}</p>
+                </div>
+                <div class="col-sm-4">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/executive/">หน้าหลัก</a></li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'dashboard:student' %}{% if selected_year %}?year={{ selected_year }}{% endif %}">
+                                ข้อมูลนักศึกษา
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">{{ faculty_name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="small-box bg-gradient-primary">
+                <div class="inner">
+                    <h3>{{ total_students|intcomma }}</h3>
+                    <p>นักศึกษาทั้งหมด</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="small-box-footer">ในคณะนี้ <i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="small-box bg-gradient-success">
+                <div class="inner">
+                    <h3>{{ program_distribution|length }}</h3>
+                    <p>สาขาวิชาที่แตกต่าง</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="small-box-footer">ความหลากหลาย <i class="fas fa-chart-pie"></i></div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="small-box bg-gradient-info">
+                <div class="inner">
+                    <h3>{{ level_distribution|length }}</h3>
+                    <p>ระดับการศึกษา</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="small-box-footer">ความหลากหลาย <i class="fas fa-chart-bar"></i></div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="small-box bg-gradient-warning">
+                <div class="inner">
+                    <h3>{{ year_distribution|length }}</h3>
+                    <p>ปีการศึกษาที่เข้า</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="small-box-footer">ช่วงปี <i class="fas fa-clock"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <!-- Row 1: Gender and Level (col-md-6 each) -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        สัดส่วนตามเพศ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="genderChart" style="height: 400px;"></div>
+                    
+                    <!-- Gender Summary -->
+                    <div class="mt-3">
+                        <h6>สรุปตามเพศ:</h6>
+                        {% for gender in gender_distribution %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>{{ gender.gender|default:"ไม่ระบุ" }}</span>
+                            <span class="badge bg-info">{{ gender.count|intcomma }} คน ({% widthratio gender.count total_students 100 %}%)</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-donut me-2"></i>
+                        สัดส่วนระดับการศึกษา
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="levelChart" style="height: 400px;"></div>
+                    
+                    <!-- Level Summary -->
+                    <div class="mt-3">
+                        <h6>สรุประดับการศึกษา:</h6>
+                        {% for level in level_distribution %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>{{ level.level_name|default:"ไม่ระบุ" }}</span>
+                            <span class="badge bg-warning text-dark">{{ level.count|intcomma }} คน ({% widthratio level.count total_students 100 %}%)</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Row 2: Year Distribution Chart (col-md-12) -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        การกระจายตามปีเข้าศึกษา ({{ year_distribution|length }} ปีการศึกษา)
+                    </h5>
+                    <button type="button" class="btn btn-light btn-sm" onclick="exportYearData()">
+                        <i class="fas fa-download me-1"></i> Export ปี
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="yearChart" style="height: 400px;"></div>
+                    
+                    <!-- Year Summary -->
+                    <div class="mt-4">
+                        <h6>สรุปตามปีเข้าศึกษา:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-danger">
+                                    <tr>
+                                        <th width="15%" class="text-center">ปี พ.ศ.</th>
+                                        <th width="20%" class="text-end">จำนวน</th>
+                                        <th width="20%" class="text-center">สัดส่วน</th>
+                                        <th width="45%">แถบแสดงสัดส่วน</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for year in year_distribution %}
+                                    <tr>
+                                        <td class="text-center">
+                                            <span class="badge bg-danger">{{ year.year|default:"ไม่ระบุ" }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold">{{ year.count|intcomma }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="text-danger fw-bold">{% widthratio year.count total_students 100 %}%</span>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar bg-danger" 
+                                                     style="width: {% widthratio year.count total_students 100 %}%">
+                                                    {% widthratio year.count total_students 100 %}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Row 3: All Programs Chart (12md) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        สาขาวิชาทั้งหมด ({{ program_distribution|length }} สาขา)
+                    </h5>
+                    <button type="button" class="btn btn-light btn-sm" onclick="exportProgramData()">
+                        <i class="fas fa-download me-1"></i> Export สาขา
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="programChart" style="height: 400px;"></div>
+                    
+                    <!-- All Programs Summary Table -->
+                    <div class="mt-4">
+                        <h6>สรุปสาขาวิชาทั้งหมด:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th width="6%">อันดับ</th>
+                                        <th width="45%">สาขาวิชา</th>
+                                        <th width="20%" class="text-center">ระดับการศึกษา</th>
+                                        <th width="14%" class="text-end">จำนวน</th>
+                                        <th width="15%" class="text-center">สัดส่วน</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prog in program_distribution %}
+                                    <tr>
+                                        <td class="text-center">
+                                            <span class="badge bg-success">{{ forloop.counter }}</span>
+                                        </td>
+                                        <td class="program-name">{{ prog.program_name|default:"ไม่ระบุ" }}</td>
+                                        <td class="text-center">
+                                            <span class="badge {% if prog.level_name == 'ปริญญาตรี' %}bg-primary{% elif prog.level_name == 'ปริญญาโท' %}bg-warning{% elif prog.level_name == 'ปริญญาเอก' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                {{ prog.level_name|default:"ไม่ระบุ" }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold">{{ prog.count|intcomma }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="text-success fw-bold">{% widthratio prog.count total_students 100 %}%</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ข้อมูลสำหรับกราฟ
+    const genderLabels = {{ gender_labels|safe }};
+    const genderData = {{ gender_data|safe }};
+    const programLabels = {{ program_labels|safe }};
+    const programData = {{ program_data|safe }};
+    const levelLabels = {{ level_labels|safe }};
+    const levelData = {{ level_data|safe }};
+    const yearLabels = {{ year_labels|safe }};
+    const yearData = {{ year_data|safe }};
+    
+    // กราฟโดนัท - สัดส่วนนักศึกษาตามเพศ
+    if (genderLabels.length > 0) {
+        // Show enhanced loading skeleton for pie chart
+        window.enhancedLoader.showChartSkeleton('genderChart', 'pie');
+        
+        setTimeout(() => {
+            try {
+        const genderOptions = {
+            series: genderData,
+            chart: {
+                type: 'donut',
+                height: 350,
+                toolbar: { show: false }
+            },
+            labels: genderLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวมทั้งหมด',
+                                formatter: function (w) {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val, opts) {
+                    const value = opts.w.config.series[opts.seriesIndex];
+                    return value.toLocaleString();
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val.toLocaleString() + ' คน';
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                fontSize: '14px'
+            },
+            colors: ['#2563eb', '#dc2626', '#d97706']
+        };
+        
+        // Clear skeleton and prepare for chart
+        window.enhancedLoader.prepareForChart('genderChart');
+        
+        const genderChart = new ApexCharts(document.querySelector("#genderChart"), genderOptions);
+        genderChart.render().then(() => {
+            window.enhancedLoader.showSuccess('genderChart', 'โหลดข้อมูลเพศสำเร็จ');
+            window.registerChart('genderChart', genderChart);
+            window.addChartExportButtons('genderChart', 'สัดส่วนตามเพศ');
+        }).catch((error) => {
+            console.error('Gender Chart Error:', error);
+            window.enhancedLoader.showEnhancedError('genderChart', 'data', 'ไม่สามารถโหลดข้อมูลเพศได้');
+        });
+        
+            } catch (error) {
+                console.error('Gender Chart Setup Error:', error);
+                window.enhancedLoader.showEnhancedError('genderChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟเพศ');
+            }
+        }, 800);
+    } else {
+        window.enhancedLoader.showEnhancedError('genderChart', 'data', 'ไม่พบข้อมูลเพศ');
+    }
+    
+    // กราฟโดนัท - ระดับการศึกษา
+    if (levelLabels.length > 0) {
+        window.enhancedLoader.showChartSkeleton('levelChart', 'pie');
+        
+        setTimeout(() => {
+            try {
+        const levelOptions = {
+            series: levelData,
+            chart: {
+                type: 'donut',
+                height: 350,
+                toolbar: { show: false }
+            },
+            labels: levelLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวม',
+                                formatter: function (w) {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    return Math.round(val) + '%'
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val.toLocaleString() + ' คน';
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                fontSize: '12px'
+            },
+            colors: ['#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16']
+        };
+        
+        window.enhancedLoader.prepareForChart('levelChart');
+        
+        const levelChart = new ApexCharts(document.querySelector("#levelChart"), levelOptions);
+        levelChart.render().then(() => {
+            window.enhancedLoader.showSuccess('levelChart', 'โหลดข้อมูลระดับการศึกษาสำเร็จ');
+            window.registerChart('levelChart', levelChart);
+            window.addChartExportButtons('levelChart', 'ระดับการศึกษา');
+        }).catch((error) => {
+            console.error('Level Chart Error:', error);
+            window.enhancedLoader.showEnhancedError('levelChart', 'data', 'ไม่สามารถโหลดข้อมูลระดับการศึกษาได้');
+        });
+        
+            } catch (error) {
+                console.error('Level Chart Setup Error:', error);
+                window.enhancedLoader.showEnhancedError('levelChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟระดับการศึกษา');
+            }
+        }, 600);
+    } else {
+        window.enhancedLoader.showEnhancedError('levelChart', 'data', 'ไม่พบข้อมูลระดับการศึกษา');
+    }
+    
+    // กราฟแท่งแนวนอน - นักศึกษาตามสาขาวิชา (แสดงทั้งหมด + Dynamic Height)
+    if (programLabels.length > 0) {
+        window.enhancedLoader.showChartSkeleton('programChart', 'bar');
+        
+        setTimeout(() => {
+            try {
+        // คำนวณความสูงแบบ Dynamic ตามจำนวนสาขา
+        const baseHeight = 300;
+        const heightPerItem = 32;  // สาขามีชื่อยาวกว่าตำแหน่งงาน
+        const minHeight = 400;
+        const maxHeight = 900;
+        const dynamicHeight = Math.min(maxHeight, Math.max(minHeight, programLabels.length * heightPerItem + baseHeight));
+        
+        console.log(`📊 Program Chart: ${programLabels.length} programs, height: ${dynamicHeight}px`);
+        
+        const programOptions = {
+            series: [{
+                name: 'จำนวนนักศึกษา',
+                data: programData
+            }],
+            chart: {
+                type: 'bar',
+                height: dynamicHeight,
+                toolbar: {
+                    show: false
+                }
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 6,
+                    horizontal: true,
+                    distributed: true,
+                    barHeight: programLabels.length <= 8 ? '70%' : programLabels.length <= 15 ? '80%' : '90%'
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    colors: ['#fff'],
+                    fontSize: programLabels.length <= 8 ? '13px' : programLabels.length <= 15 ? '12px' : '11px',
+                    fontWeight: 'bold'
+                },
+                formatter: function(val) {
+                    return val.toLocaleString() + ' คน';
+                }
+            },
+            xaxis: {
+                categories: programLabels,
+                title: {
+                    text: 'จำนวนนักศึกษา (คน)',
+                    style: {
+                        fontSize: '14px',
+                        fontWeight: '600'
+                    }
+                },
+                labels: {
+                    style: {
+                        fontSize: programLabels.length <= 8 ? '12px' : '11px'
+                    },
+                    formatter: function(val) {
+                        return val.toLocaleString();
+                    }
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'สาขาวิชา',
+                    style: {
+                        fontSize: '14px',
+                        fontWeight: '600'
+                    }
+                },
+                labels: {
+                    style: {
+                        fontSize: programLabels.length <= 8 ? '14px' : programLabels.length <= 15 ? '13px' : '12px',
+                        fontWeight: '500'
+                    },
+                    formatter: function(val) {
+                        // ตัดคำที่ยาวเกินไป
+                        let maxLength = programLabels.length <= 8 ? 50 : programLabels.length <= 15 ? 45 : 40;
+                        if (val.length > maxLength) {
+                            return val.substring(0, maxLength - 3) + '...';
+                        }
+                        return val;
+                    }
+                }
+            },
+            grid: {
+                show: true,
+                borderColor: '#e0e6ed',
+                strokeDashArray: 5,
+                xaxis: {
+                    lines: {
+                        show: true
+                    }
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val.toLocaleString() + ' คน';
+                    }
+                }
+            },
+            title: {
+                text: 'การกระจายนักศึกษาตามสาขาวิชา',
+                align: 'center',
+                style: {
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    color: '#059669'
+                }
+            },
+            colors: ['#059669']
+        };
+        
+        window.enhancedLoader.prepareForChart('programChart');
+        
+        const programChart = new ApexCharts(document.querySelector("#programChart"), programOptions);
+        programChart.render().then(() => {
+            window.enhancedLoader.showSuccess('programChart', 'โหลดข้อมูลสาขาวิชาสำเร็จ');
+            window.registerChart('programChart', programChart);
+            window.addChartExportButtons('programChart', 'นักศึกษาตามสาขาวิชา');
+        }).catch((error) => {
+            console.error('Program Chart Error:', error);
+            window.enhancedLoader.showEnhancedError('programChart', 'data', 'ไม่สามารถโหลดข้อมูลสาขาวิชาได้');
+        });
+        
+            } catch (error) {
+                console.error('Program Chart Setup Error:', error);
+                window.enhancedLoader.showEnhancedError('programChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟสาขาวิชา');
+            }
+        }, 1200);
+    } else {
+        window.enhancedLoader.showEnhancedError('programChart', 'data', 'ไม่พบข้อมูลสาขาวิชา');
+    }
+    
+    // กราฟแท่งตั้ง - นักศึกษาตามปีเข้าศึกษา
+    if (yearLabels.length > 0) {
+        window.enhancedLoader.showChartSkeleton('yearChart', 'bar');
+        
+        setTimeout(() => {
+            try {
+        const yearOptions = {
+            series: [{
+                name: 'จำนวนนักศึกษา',
+                data: yearData
+            }],
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: {
+                    show: false
+                }
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    columnWidth: '75%',
+                    distributed: true
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    colors: ['#fff'],
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                },
+                formatter: function(val) {
+                    return val.toLocaleString();
+                }
+            },
+            xaxis: {
+                categories: yearLabels,
+                title: {
+                    text: 'ปี พ.ศ.',
+                    style: {
+                        fontSize: '14px',
+                        fontWeight: '600'
+                    }
+                },
+                labels: {
+                    style: {
+                        fontSize: '12px'
+                    }
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'จำนวนนักศึกษา (คน)',
+                    style: {
+                        fontSize: '14px',
+                        fontWeight: '600'
+                    }
+                },
+                labels: {
+                    formatter: function(val) {
+                        return val.toLocaleString();
+                    }
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val.toLocaleString() + ' คน';
+                    }
+                }
+            },
+            title: {
+                text: 'จำนวนนักศึกษาแยกตามปีเข้าศึกษา',
+                align: 'center',
+                style: {
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    color: '#dc2626'
+                }
+            },
+            colors: ['#dc2626']
+        };
+        
+        window.enhancedLoader.prepareForChart('yearChart');
+        
+        const yearChart = new ApexCharts(document.querySelector("#yearChart"), yearOptions);
+        yearChart.render().then(() => {
+            window.enhancedLoader.showSuccess('yearChart', 'โหลดข้อมูลปีการศึกษาสำเร็จ');
+            window.registerChart('yearChart', yearChart);
+            window.addChartExportButtons('yearChart', 'ปีที่เข้าศึกษา');
+        }).catch((error) => {
+            console.error('Year Chart Error:', error);
+            window.enhancedLoader.showEnhancedError('yearChart', 'data', 'ไม่สามารถโหลดข้อมูลปีการศึกษาได้');
+        });
+        
+            } catch (error) {
+                console.error('Year Chart Setup Error:', error);
+                window.enhancedLoader.showEnhancedError('yearChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟปีการศึกษา');
+            }
+        }, 400);
+    } else {
+        window.enhancedLoader.showEnhancedError('yearChart', 'data', 'ไม่พบข้อมูลปีการศึกษา');
+    }
+    
+    // Export functions
+    window.exportProgramData = function() {
+        const programData = [];
+        {% for prog in program_distribution %}
+        programData.push({
+            'อันดับ': {{ forloop.counter }},
+            'สาขาวิชา': '{{ prog.program_name|default:"ไม่ระบุ" }}',
+            'ระดับการศึกษา': '{{ prog.level_name|default:"ไม่ระบุ" }}',
+            'จำนวน': {{ prog.count|default:0 }},
+            'สัดส่วน': '{% widthratio prog.count total_students 100 %}%'
+        });
+        {% endfor %}
+        
+        if (window.chartUtils && window.chartUtils.exportChart) {
+            window.chartUtils.exportChart.toCSV(programData, 'สาขาวิชาและระดับการศึกษา_{{ faculty_name }}');
+        } else {
+            console.log('📊 Export functionality not available');
+        }
+    };
+    
+    window.exportYearData = function() {
+        const yearData = [];
+        {% for year in year_distribution %}
+        yearData.push({
+            'ปี พ.ศ.': {{ year.year|default:"ไม่ระบุ" }},
+            'จำนวน': {{ year.count|default:0 }},
+            'สัดส่วน': '{% widthratio year.count total_students 100 %}%'
+        });
+        {% endfor %}
+        
+        if (window.chartUtils && window.chartUtils.exportChart) {
+            window.chartUtils.exportChart.toCSV(yearData, 'ปีเข้าศึกษา_{{ faculty_name }}');
+        } else {
+            console.log('📊 Export functionality not available');
+        }
+    };
+    
+    console.log('✅ Faculty Detail Dashboard loaded successfully for: {{ faculty_name }}');
+});
+</script>
+{% endblock %}

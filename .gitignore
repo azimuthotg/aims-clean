@@ -1,11 +1,45 @@
-credentials/ 
-capture/
-*.json 
-.env 
-__pycache__/
-*.pyc
+# Security - Sensitive files
+credentials/
+.env
 .env.local
-config.jsonaims_env/ 
-venv/ 
-env/ 
-ENV/ 
+.env.production
+*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+aims_env/
+venv/
+venv_linux/
+env/
+ENV/
+.venv/
+
+# Django
+*.log
+django.log
+staticfiles/
+media/
+db.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+capture/
+conversation-*.txt
+config.json
+
+# Byte-compiled / optimized / DLL files
+*.pyc

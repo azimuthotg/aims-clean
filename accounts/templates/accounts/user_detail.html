@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ user_obj.get_full_name|default:user_obj.username }} - รายละเอียดผู้ใช้{% endblock %}
+
+{% block extra_css %}
+<style>
+.user-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-info-card {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.badge-role {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+}
+
+.activity-item {
+    border-left: 3px solid #2563eb;
+    padding-left: 15px;
+    margin-bottom: 15px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-user"></i> รายละเอียดผู้ใช้
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'user_management' %}">จัดการผู้ใช้งาน</a></li>
+                        <li class="breadcrumb-item active">{{ user_obj.get_full_name|default:user_obj.username }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- User Profile Card -->
+                <div class="col-md-4">
+                    <div class="card user-info-card">
+                        <div class="card-body text-center">
+                            {% if user_obj.profile_image %}
+                                <img src="{{ user_obj.profile_image }}" class="user-avatar-large mb-3" alt="Profile">
+                            {% else %}
+                                <div class="user-avatar-large mx-auto mb-3 bg-white text-primary d-flex align-items-center justify-content-center" 
+                                     style="font-size: 48px; font-weight: bold;">
+                                    {{ user_obj.first_name|first|default:user_obj.username|first|upper }}
+                                </div>
+                            {% endif %}
+                            
+                            <h3 class="mb-1">{{ user_obj.get_full_name|default:user_obj.username }}</h3>
+                            <p class="mb-2">{{ user_obj.email|default:"ไม่ระบุอีเมล" }}</p>
+                            
+                            <span class="badge badge-role 
+                                {% if user_obj.user_role == 'super_admin' %}badge-danger
+                                {% elif user_obj.user_role == 'staff_admin' %}badge-warning  
+                                {% elif user_obj.user_role == 'academic_service' %}badge-info
+                                {% else %}badge-secondary{% endif %}">
+                                {{ user_obj.get_role_display_thai }}
+                            </span>
+                            
+                            {% if user_obj.is_ldap_user %}
+                                <br><span class="badge badge-light mt-2">ผู้ใช้ LDAP</span>
+                            {% endif %}
+                            
+                            <div class="mt-3">
+                                {% if can_edit %}
+                                <a href="{% url 'user_edit' user_obj.id %}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i> แก้ไขข้อมูล
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'user_management' %}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-arrow-left"></i> กลับ
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i> สถานะ
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-item">
+                                <h4>
+                                    {% if user_obj.is_active %}
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    {% else %}
+                                        <i class="fas fa-times-circle text-danger"></i>
+                                    {% endif %}
+                                </h4>
+                                <p class="mb-0">
+                                    {% if user_obj.is_active %}ใช้งานได้{% else %}ปิดใช้งาน{% endif %}
+                                </p>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <h4>
+                                    {% if user_obj.last_login %}
+                                        <i class="fas fa-sign-in-alt text-info"></i>
+                                    {% else %}
+                                        <i class="fas fa-user-clock text-muted"></i>
+                                    {% endif %}
+                                </h4>
+                                <p class="mb-0">
+                                    {% if user_obj.last_login %}
+                                        {{ user_obj.last_login|naturaltime }}
+                                    {% else %}
+                                        ยังไม่เคยเข้าใช้
+                                    {% endif %}
+                                </p>
+                                <small>เข้าใช้ล่าสุด</small>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <h4><i class="fas fa-calendar-alt text-warning"></i></h4>
+                                <p class="mb-0">{{ user_obj.date_joined|date:"d M Y" }}</p>
+                                <small>สมัครเมื่อ</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Details -->
+                <div class="col-md-8">
+                    <!-- Basic Information -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-id-card"></i> ข้อมูลพื้นฐาน
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>ชื่อผู้ใช้:</strong></td>
+                                            <td>{{ user_obj.username }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>ชื่อ-นามสกุล:</strong></td>
+                                            <td>{{ user_obj.get_full_name|default:"ไม่ระบุ" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>อีเมล:</strong></td>
+                                            <td>{{ user_obj.email|default:"ไม่ระบุ" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>เบอร์โทรศัพท์:</strong></td>
+                                            <td>{{ user_obj.phone|default:"ไม่ระบุ" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>หน่วยงาน:</strong></td>
+                                            <td>{{ user_obj.department|default:"ไม่ระบุ" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>แผนก:</strong></td>
+                                            <td>{{ user_obj.get_division_display_thai }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>ตำแหน่ง:</strong></td>
+                                            <td>{{ user_obj.position|default:"ไม่ระบุ" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>รหัสบุคลากร:</strong></td>
+                                            <td>{{ user_obj.personnel_id|default:"ไม่ระบุ" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>ประเภทบุคลากร:</strong></td>
+                                            <td>{{ user_obj.personnel_type|default:"ไม่ระบุ" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Permissions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-shield-alt"></i> สิทธิ์การใช้งาน
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               {% if user_obj.can_manage_users %}checked{% endif %} disabled>
+                                        <label class="form-check-label">
+                                            จัดการผู้ใช้งาน
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               {% if user_obj.can_view_all_data %}checked{% endif %} disabled>
+                                        <label class="form-check-label">
+                                            ดูข้อมูลทั้งหมด
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               {% if user_obj.is_staff %}checked{% endif %} disabled>
+                                        <label class="form-check-label">
+                                            เข้า Django Admin
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LDAP Data (if available) -->
+                    {% if user_obj.ldap_data %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-server"></i> ข้อมูล LDAP
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                ข้อมูลล่าสุดจาก LDAP API
+                            </div>
+                            <pre class="bg-light p-3 rounded">{{ user_obj.ldap_data|pprint }}</pre>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Notes -->
+                    {% if user_obj.notes %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-sticky-note"></i> หมายเหตุ
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ user_obj.notes|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update last activity when viewing user profile
+fetch('{% url "update_last_activity" %}', {
+    method: 'POST',
+    headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'Content-Type': 'application/json',
+    }
+});
+</script>
+{% endblock %}

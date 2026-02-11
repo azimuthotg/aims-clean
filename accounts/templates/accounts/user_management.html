@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}จัดการผู้ใช้งาน - AIMS{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Remove unwanted margins that affect layout */
+.container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* User Management specific styles */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.badge-role {
+    font-size: 0.75rem;
+}
+
+.user-status.online {
+    color: #28a745;
+}
+
+.user-status.offline {
+    color: #6c757d;
+}
+
+.stats-card {
+    transition: transform 0.2s;
+    border-radius: 12px;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Enhanced table styling */
+.table {
+    font-size: 0.9rem;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 12px 8px;
+}
+
+.table th {
+    font-weight: 600;
+    background: #f8f9fa;
+    border: none;
+    padding: 15px 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1199.98px) {
+    .stats-card .inner h3 {
+        font-size: 1.8rem;
+    }
+    
+    .stats-card .inner p {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Card optimizations */
+.card {
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    border: none;
+}
+
+.small-box {
+    margin-bottom: 20px;
+}
+
+/* Form optimizations */
+.form-control, .btn {
+    border-radius: 6px;
+}
+
+.input-group-append .btn {
+    border-radius: 0 6px 6px 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-users"></i> จัดการผู้ใช้งาน
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">จัดการผู้ใช้งาน</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+            
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+                    <div class="small-box bg-info stats-card">
+                        <div class="inner">
+                            <h3>{{ stats.total_users|intcomma }}</h3>
+                            <p>ผู้ใช้ทั้งหมด</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+                    <div class="small-box bg-success stats-card">
+                        <div class="inner">
+                            <h3>{{ stats.active_users|intcomma }}</h3>
+                            <p>ผู้ใช้ที่ใช้งานได้</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+                    <div class="small-box bg-warning stats-card">
+                        <div class="inner">
+                            <h3>{{ stats.ldap_users|intcomma }}</h3>
+                            <p>ผู้ใช้ LDAP</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+                    <div class="small-box bg-danger stats-card">
+                        <div class="inner">
+                            <h3>{{ stats.super_admins|intcomma }}</h3>
+                            <p>ผู้ดูแลระบบ</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management Table -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 class="card-title">
+                                <i class="fas fa-list"></i> รายชื่อผู้ใช้งาน
+                            </h3>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <a href="{% url 'add_user' %}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> เพิ่มผู้ใช้ใหม่
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Search and Filter Form -->
+                    <form method="get" class="mb-4">
+                        <div class="row">
+                            <div class="col-lg-5 col-md-6 mb-2">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="ค้นหาชื่อ, อีเมล, หน่วยงาน..." 
+                                           value="{{ search_query }}">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-2 col-md-3 col-sm-6 mb-2">
+                                <select name="role" class="form-control">
+                                    <option value="">ทุกบทบาท</option>
+                                    {% for role_key, role_name in user_roles %}
+                                        <option value="{{ role_key }}" {% if role_filter == role_key %}selected{% endif %}>
+                                            {{ role_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-lg-2 col-md-3 col-sm-6 mb-2">
+                                <select name="status" class="form-control">
+                                    <option value="">ทุกสถานะ</option>
+                                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>ใช้งานได้</option>
+                                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>ปิดใช้งาน</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-lg-3 col-md-12 mb-2">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <button type="submit" class="btn btn-primary btn-block">
+                                            <i class="fas fa-filter"></i> กรอง
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="{% url 'user_management' %}" class="btn btn-secondary btn-block">
+                                            <i class="fas fa-undo"></i> ล้าง
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Users Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width: 30%;">ผู้ใช้</th>
+                                    <th style="width: 15%;" class="text-center">บทบาท</th>
+                                    <th style="width: 20%;">หน่วยงาน</th>
+                                    <th style="width: 10%;" class="text-center">สถานะ</th>
+                                    <th style="width: 15%;" class="text-center">เข้าใช้ล่าสุด</th>
+                                    <th style="width: 10%;" class="text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user_obj in page_obj %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if user_obj.profile_image %}
+                                                <img src="{{ user_obj.profile_image }}" class="user-avatar me-3" alt="Avatar">
+                                            {% else %}
+                                                <div class="user-avatar bg-primary text-white d-flex align-items-center justify-content-center me-3">
+                                                    {{ user_obj.first_name|first|default:user_obj.username|first|upper }}
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ user_obj.get_full_name|default:user_obj.username }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ user_obj.email }}</small>
+                                                {% if user_obj.is_ldap_user %}
+                                                    <span class="badge badge-info badge-sm ml-1">LDAP</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge badge-role 
+                                            {% if user_obj.user_role == 'super_admin' %}badge-danger
+                                            {% elif user_obj.user_role == 'staff_admin' %}badge-warning  
+                                            {% elif user_obj.user_role == 'academic_service' %}badge-primary
+                                            {% else %}badge-secondary{% endif %}">
+                                            {{ user_obj.get_role_display_thai }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ user_obj.department|default:"-" }}
+                                        {% if user_obj.division %}
+                                            <br><span class="badge badge-secondary badge-sm">{{ user_obj.get_division_display_thai }}</span>
+                                        {% endif %}
+                                        {% if user_obj.position %}
+                                            <br><small class="text-muted">{{ user_obj.position }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if user_obj.is_active %}
+                                            <span class="badge badge-success">ใช้งานได้</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">ปิดใช้งาน</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if user_obj.last_login %}
+                                            <span class="user-status {% if user_obj.last_activity and user_obj.last_activity|timesince < "5 minutes ago" %}online{% else %}offline{% endif %}">
+                                                {{ user_obj.last_login|naturaltime }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">ยังไม่เคยเข้าใช้</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'user_detail' user_obj.id %}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'user_edit' user_obj.id %}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <div class="py-4">
+                                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                            <p class="text-muted">ไม่พบผู้ใช้งานตามเงื่อนไขที่ค้นหา</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="User pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if role_filter %}role={{ role_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page=1">« แรก</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if role_filter %}role={{ role_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">‹ ก่อนหน้า</a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    หน้า {{ page_obj.number }} จาก {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if role_filter %}role={{ role_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.next_page_number }}">ถัดไป ›</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if role_filter %}role={{ role_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.paginator.num_pages }}">สุดท้าย »</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit form on filter change
+document.querySelectorAll('select[name="role"], select[name="status"]').forEach(function(select) {
+    select.addEventListener('change', function() {
+        this.form.submit();
+    });
+});
+
+// Update last activity every 5 minutes
+setInterval(function() {
+    fetch('{% url "update_last_activity" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        }
+    });
+}, 300000); // 5 minutes
+</script>
+{% endblock %}

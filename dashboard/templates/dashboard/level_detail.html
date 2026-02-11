@@ -1,0 +1,480 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ level_name }} - รายละเอียดระดับการศึกษา{% endblock %}
+
+{% block content %}
+    
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-8">
+                    <h1 class="m-0">{{ level_name }}</h1>
+                    <p class="text-muted">รายละเอียดข้อมูลนักศึกษาในระดับการศึกษา - {{ year_filter_label }}</p>
+                </div>
+                <div class="col-sm-4">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/executive/">หน้าหลัก</a></li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'dashboard:student' %}{% if selected_year %}?year={{ selected_year }}{% endif %}">
+                                ข้อมูลนักศึกษา
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">{{ level_name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="small-box bg-gradient-primary">
+                <div class="inner">
+                    <h3>{{ total_students|intcomma }}</h3>
+                    <p>นักศึกษาทั้งหมด</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="small-box-footer">ในระดับการศึกษานี้ <i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="small-box bg-gradient-success">
+                <div class="inner">
+                    <h3>{{ faculty_distribution|length }}</h3>
+                    <p>คณะที่มีนักศึกษา</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-university"></i>
+                </div>
+                <div class="small-box-footer">คณะ <i class="fas fa-chart-pie"></i></div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="small-box bg-gradient-info">
+                <div class="inner">
+                    <h3>{{ program_distribution|length }}</h3>
+                    <p>สาขาวิชา</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="small-box-footer">สาขา <i class="fas fa-chart-bar"></i></div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="small-box bg-gradient-warning">
+                <div class="inner">
+                    <h3>{{ year_distribution|length }}</h3>
+                    <p>ปีการศึกษาที่เข้า</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="small-box-footer">ช่วงปี <i class="fas fa-clock"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <!-- Row 1: Gender and Faculty (col-md-6 each) -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        สัดส่วนตามเพศ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="genderChart" style="height: 400px;"></div>
+                    
+                    <!-- Gender Summary Table -->
+                    <div class="mt-3">
+                        <h6>สรุปตามเพศ:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-info">
+                                    <tr>
+                                        <th width="40%">เพศ</th>
+                                        <th width="30%" class="text-end">จำนวน</th>
+                                        <th width="30%" class="text-center">สัดส่วน</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for gender in gender_distribution %}
+                                    <tr>
+                                        <td>{{ gender.gender|default:"ไม่ระบุ" }}</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-info">{{ gender.count|intcomma }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="text-info fw-bold">{% widthratio gender.count total_students 100 %}%</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-donut me-2"></i>
+                        สัดส่วนตามคณะ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="facultyChart" style="height: 400px;"></div>
+                    
+                    <!-- Faculty Summary Table -->
+                    <div class="mt-3">
+                        <h6>สรุปตามคณะ (Top 5):</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-warning">
+                                    <tr>
+                                        <th width="40%">คณะ</th>
+                                        <th width="30%" class="text-end">จำนวน</th>
+                                        <th width="30%" class="text-center">สัดส่วน</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for faculty in faculty_distribution|slice:":5" %}
+                                    <tr>
+                                        <td class="faculty-name"><small>{{ faculty.faculty_name|default:"ไม่ระบุ" }}</small></td>
+                                        <td class="text-end">
+                                            <span class="badge bg-warning text-dark">{{ faculty.count|intcomma }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="text-warning fw-bold">{% widthratio faculty.count total_students 100 %}%</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Row 2: Programs by Faculty (col-md-12) -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-layer-group me-2"></i>
+                        สาขาวิชาจำแนกตามคณะ ({{ total_programs }} สาขา)
+                    </h5>
+                    <button type="button" class="btn btn-light btn-sm" onclick="exportProgramData()">
+                        <i class="fas fa-download me-1"></i> Export สาขา
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead class="table-success">
+                                <tr>
+                                    <th width="25%">คณะ</th>
+                                    <th width="35%">สาขาวิชา</th>
+                                    <th class="text-end" width="15%">จำนวน</th>
+                                    <th class="text-center" width="10%">สัดส่วน</th>
+                                    <th class="text-center" width="15%">แถบสัดส่วน</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for faculty_name, programs in faculty_programs.items %}
+                                    {% for program in programs %}
+                                    <tr>
+                                        {% if forloop.first %}
+                                        <td rowspan="{{ programs|length|add:1 }}" class="align-middle bg-light">
+                                            <strong class="text-success faculty-name">{{ faculty_name }}</strong>
+                                            <br><small class="text-muted">({{ programs|length }} สาขา)</small>
+                                        </td>
+                                        {% endif %}
+                                        <td class="program-name">{{ program.program_name|default:"ไม่ระบุ" }}</td>
+                                        <td class="text-end">
+                                            <span class="fw-bold">{{ program.count|intcomma }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="text-success fw-bold">{% widthratio program.count total_students 100 %}%</span>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 16px;">
+                                                <div class="progress-bar bg-success" 
+                                                     style="width: {% widthratio program.count total_students 100 %}%">
+                                                    {% widthratio program.count total_students 100 %}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <!-- ผลรวมของคณะ -->
+                                    {% for fname, ftotal in faculty_totals.items %}
+                                        {% if fname == faculty_name %}
+                                        <tr class="table-success fw-bold">
+                                            <td><strong>รวม {{ faculty_name }}</strong></td>
+                                            <td class="text-end">
+                                                <span class="fw-bold text-success fs-6">{{ ftotal|intcomma }} คน</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="fw-bold text-success">{% widthratio ftotal total_students 100 %}%</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 18px;">
+                                                    <div class="progress-bar bg-success" 
+                                                         style="width: {% widthratio ftotal total_students 100 %}%">
+                                                        <strong>{% widthratio ftotal total_students 100 %}%</strong>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <!-- เส้นแบ่งระหว่างคณะ -->
+                                    {% if not forloop.last %}
+                                    <tr style="height: 8px;">
+                                        <td colspan="5" class="border-0 bg-white"></td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ข้อมูลสำหรับกราฟ
+    const genderLabels = {{ gender_labels|safe }};
+    const genderData = {{ gender_data|safe }};
+    const facultyLabels = {{ faculty_labels|safe }};
+    const facultyData = {{ faculty_data|safe }};
+    const programLabels = {{ program_labels|safe }};
+    const programData = {{ program_data|safe }};
+    
+    // กราฟโดนัท - สัดส่วนนักศึกษาตามเพศ
+    if (genderLabels.length > 0) {
+        window.enhancedLoader.showChartSkeleton('genderChart', 'pie');
+        
+        setTimeout(() => {
+            try {
+        const genderOptions = {
+            series: genderData,
+            chart: {
+                type: 'donut',
+                height: 350,
+                toolbar: {
+                    show: false
+                }
+            },
+            labels: genderLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวมทั้งหมด',
+                                formatter: function (w) {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val, opts) {
+                    const value = opts.w.config.series[opts.seriesIndex];
+                    return value.toLocaleString();
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val.toLocaleString() + ' คน';
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                fontSize: '14px'
+            },
+            colors: ['#2563eb', '#dc2626', '#d97706']
+        };
+        
+        window.enhancedLoader.prepareForChart('genderChart');
+        
+        const genderChart = new ApexCharts(document.querySelector("#genderChart"), genderOptions);
+        genderChart.render().then(() => {
+            window.enhancedLoader.showSuccess('genderChart', 'โหลดข้อมูลเพศสำเร็จ');
+            window.registerChart('genderChart', genderChart);
+            window.addChartExportButtons('genderChart', 'สัดส่วนตามเพศ');
+        }).catch((error) => {
+            console.error('Gender Chart Error:', error);
+            window.enhancedLoader.showEnhancedError('genderChart', 'data', 'ไม่สามารถโหลดข้อมูลเพศได้');
+        });
+        
+            } catch (error) {
+                console.error('Gender Chart Setup Error:', error);
+                window.enhancedLoader.showEnhancedError('genderChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟเพศ');
+            }
+        }, 800);
+    } else {
+        window.enhancedLoader.showEnhancedError('genderChart', 'data', 'ไม่พบข้อมูลเพศ');
+    }
+    
+    // กราฟโดนัท - สัดส่วนตามคณะ
+    if (facultyLabels.length > 0) {
+        window.enhancedLoader.showChartSkeleton('facultyChart', 'pie');
+        
+        setTimeout(() => {
+            try {
+        const facultyOptions = {
+            series: facultyData,
+            chart: {
+                type: 'donut',
+                height: 350,
+                toolbar: {
+                    show: false
+                }
+            },
+            labels: facultyLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวม',
+                                formatter: function (w) {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    return Math.round(val) + '%'
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val.toLocaleString() + ' คน';
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                fontSize: '12px'
+            },
+            colors: ['#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#14b8a6', '#a855f7', '#22c55e']
+        };
+        
+        window.enhancedLoader.prepareForChart('facultyChart');
+        
+        const facultyChart = new ApexCharts(document.querySelector("#facultyChart"), facultyOptions);
+        facultyChart.render().then(() => {
+            window.enhancedLoader.showSuccess('facultyChart', 'โหลดข้อมูลคณะสำเร็จ');
+            window.registerChart('facultyChart', facultyChart);
+            window.addChartExportButtons('facultyChart', 'สัดส่วนตามคณะ');
+        }).catch((error) => {
+            console.error('Faculty Chart Error:', error);
+            window.enhancedLoader.showEnhancedError('facultyChart', 'data', 'ไม่สามารถโหลดข้อมูลคณะได้');
+        });
+        
+            } catch (error) {
+                console.error('Faculty Chart Setup Error:', error);
+                window.enhancedLoader.showEnhancedError('facultyChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟคณะ');
+            }
+        }, 600);
+    } else {
+        window.enhancedLoader.showEnhancedError('facultyChart', 'data', 'ไม่พบข้อมูลคณะ');
+    }
+    
+    // ไม่ใช้กราฟสาขาวิชาแล้ว - ใช้ตารางแทน
+    
+    // Export functions
+    
+    window.exportProgramData = function() {
+        const programData = [];
+        let counter = 1;
+        {% for faculty_name, programs in faculty_programs.items %}
+            {% for program in programs %}
+            programData.push({
+                'ลำดับ': counter++,
+                'คณะ': '{{ faculty_name }}',
+                'สาขาวิชา': '{{ program.program_name|default:"ไม่ระบุ" }}',
+                'จำนวน': {{ program.count|default:0 }},
+                'สัดส่วน': '{% widthratio program.count total_students 100 %}%'
+            });
+            {% endfor %}
+            {% for fname, ftotal in faculty_totals.items %}
+                {% if fname == faculty_name %}
+                programData.push({
+                    'ลำดับ': '',
+                    'คณะ': '{{ faculty_name }}',
+                    'สาขาวิชา': 'รวม {{ faculty_name }}',
+                    'จำนวน': {{ ftotal }},
+                    'สัดส่วน': '{% widthratio ftotal total_students 100 %}%'
+                });
+                {% endif %}
+            {% endfor %}
+            // Add blank row between faculties
+            {% if not forloop.last %}
+            programData.push({
+                'ลำดับ': '',
+                'คณะ': '',
+                'สาขาวิชา': '',
+                'จำนวน': '',
+                'สัดส่วน': ''
+            });
+            {% endif %}
+        {% endfor %}
+        
+        if (window.chartUtils && window.chartUtils.exportChart) {
+            window.chartUtils.exportChart.toCSV(programData, 'สาขาวิชาจำแนกตามคณะ_{{ level_name }}');
+        } else {
+            console.log('📊 Export functionality not available');
+        }
+    };
+    
+    console.log('✅ Level Detail Dashboard loaded successfully for: {{ level_name }}');
+});
+</script>
+{% endblock %}

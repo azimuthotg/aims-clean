@@ -13,6 +13,14 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    print("Warning: python-dotenv not installed. Please run: pip install python-dotenv")
+    # Will use os.getenv() with fallback values
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,12 +29,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-al2-cay3ddskpfydi5nyd+#c1%5#dnrns0w8=zx1r*p=t%if^^'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() in ['true', '1', 'yes', 'on']
 
-ALLOWED_HOSTS = ["*"]
+# Convert comma-separated ALLOWED_HOSTS to list
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',') if os.getenv('ALLOWED_HOSTS', '*') != '*' else ['*']
 
 
 # Application definition
@@ -38,12 +47,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'corsheaders',
 
     #Custom Apps
-    'smart_form',
     'accounts',
     'dashboard',
+    'dashboard_system',  # Executive Dashboard System v2.0
 ]
 
 MIDDLEWARE = [
@@ -83,12 +93,12 @@ WSGI_APPLICATION = 'aims_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'aims',
-        'USER': 'admin_e',
-        'PASSWORD': 'REMOVED_PASSWORD',
-        'HOST': '202.29.55.213',
-        'PORT': '3306',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
+        'NAME': os.getenv('DB_NAME', 'aims'),
+        'USER': os.getenv('DB_USER', 'admin_e'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'REMOVED_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', '202.29.55.213'),
+        'PORT': os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
             'charset': 'utf8mb4',
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
@@ -131,7 +141,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -148,18 +161,22 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # LDAP API Settings
-LDAP_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc0OTM5MzQ3LCJpYXQiOjE3NDM0MDMzNDcsImp0aSI6ImJhYWUzOTI4MjFiZjQ0NTFiZGEzZTM0YmI1MDY3OTU4IiwidXNlcl9pZCI6NH0.S82vbk8gfPMHsEkUbaxu1ubOt5T0tVfZJIfOBF5q1xU'
+LDAP_API_URL = os.getenv('LDAP_API_URL', 'https://api.npu.ac.th/v2/ldap/auth_and_get_personnel/')
+LDAP_API_TOKEN = os.getenv('LDAP_API_TOKEN', 'your-ldap-token-here')
 
 # Login URL
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/accounts/portal/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
-# เพิ่มใน settings.py
-GOOGLE_SHEETS_CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credentials', 'control-room-440116-7cd01a8c02bd.json')
+# Google Sheets Integration
+GOOGLE_SHEETS_CREDENTIALS_FILE = os.getenv('GOOGLE_SHEETS_CREDENTIALS_FILE', 
+                                           os.path.join(BASE_DIR, 'credentials', 'control-room-440116-7cd01a8c02bd.json'))
+GOOGLE_SHEETS_SPREADSHEET_ID = os.getenv('GOOGLE_SHEETS_SPREADSHEET_ID', '1Z64aIUqfH2SMc__m3brPINUE6kqgQq_ii0OC8uXiae8')
 
-# อนุญาต CORS จากทุกโดเมน (สำหรับการพัฒนา)
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS Settings
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:8000').split(',')
+CORS_ALLOW_ALL_ORIGINS = os.getenv('DEBUG', 'True').lower() in ['true', '1', 'yes', 'on']  # Only in debug mode
 # หรือระบุโดเมนที่อนุญาตเฉพาะ
 # CORS_ALLOWED_ORIGINS = [
 #     "https://example.com",
@@ -168,3 +185,14 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # เพิ่ม security headers
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+
+# JWT Settings for SSO
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', SECRET_KEY)
+JWT_ALGORITHM = 'HS256'
+JWT_EXPIRATION_HOURS = int(os.getenv('JWT_EXPIRATION_HOURS', '8'))
+
+# SSO Settings
+SSO_COOKIE_NAME = 'sso_token'
+SSO_COOKIE_DOMAIN = os.getenv('SSO_COOKIE_DOMAIN', None)  # None = current domain only
+SSO_COOKIE_SECURE = os.getenv('SSO_COOKIE_SECURE', 'False').lower() in ['true', '1', 'yes', 'on']
+SSO_COOKIE_HTTPONLY = True  # ป้องกัน XSS

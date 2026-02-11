@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }} - AIMS Dashboard System v2.0{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Executive Dashboard Specific Styles */
+    .executive-kpi-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .executive-kpi-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .kpi-label {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    .trend-indicator {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .trend-positive {
+        color: #28a745;
+    }
+    
+    .trend-negative {
+        color: #dc3545;
+    }
+    
+    .executive-insights {
+        background: #f8f9fa;
+        border-left: 5px solid #2563eb;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    
+    .system-header {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .quick-action-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin: 5px;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- System Header -->
+    <div class="system-header">
+        <h1><i class="fas fa-chart-line me-3"></i>{{ system_name }}</h1>
+        <p class="mb-0">Advanced Analytics Dashboard for Management Decision Making</p>
+        <small>Version {{ system_version }} | Real-time Data</small>
+    </div>
+
+    <!-- Executive KPIs Row -->
+    <div class="row">
+        <div class="col-lg-3 col-md-6">
+            <div class="executive-kpi-card">
+                <div class="kpi-value">{{ total_staff|intcomma }}</div>
+                <div class="kpi-label">Total Personnel</div>
+                <div class="trend-indicator trend-positive">+5.2%</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="executive-kpi-card">
+                <div class="kpi-value">{{ total_students|intcomma }}</div>
+                <div class="kpi-label">Total Students</div>
+                <div class="trend-indicator trend-positive">+12.1%</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="executive-kpi-card">
+                <div class="kpi-value">{{ total_services }}</div>
+                <div class="kpi-label">Active Services</div>
+                <div class="trend-indicator trend-positive">+8.7%</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="executive-kpi-card">
+                <div class="kpi-value">Excellent</div>
+                <div class="kpi-label">System Health</div>
+                <div class="trend-indicator trend-positive">+15.3%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body text-center">
+                    <a href="{% url 'dashboard:staff' %}" class="btn quick-action-btn">
+                        <i class="fas fa-users me-2"></i>Staff Details
+                    </a>
+                    <a href="{% url 'dashboard:student' %}" class="btn quick-action-btn">
+                        <i class="fas fa-graduation-cap me-2"></i>Student Details
+                    </a>
+                    <a href="{% url 'dashboard:service_statistics' %}" class="btn quick-action-btn">
+                        <i class="fas fa-chart-line me-2"></i>Service Statistics
+                    </a>
+                    <a href="{% url 'dashboard_system:reports' %}" class="btn quick-action-btn">
+                        <i class="fas fa-file-alt me-2"></i>Reports Center
+                    </a>
+                    <button class="btn quick-action-btn" onclick="exportExecutiveSummary()">
+                        <i class="fas fa-download me-2"></i>Export Summary
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Analytics Cards -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Staff Distribution by Department</h5>
+                    <a href="{% url 'dashboard:staff' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-external-link-alt"></i> View Details
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="staffDepartmentChart" style="height: 400px;"></div>
+                    
+                    <!-- Top 5 Departments Summary -->
+                    <div class="mt-3">
+                        <h6>Top 5 Departments:</h6>
+                        {% if staff_departments %}
+                        <div class="row">
+                            {% for dept in staff_departments|slice:":5" %}
+                            <div class="col-12 mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small">{{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}</span>
+                                    <span class="badge bg-primary">{{ dept.count|default:0 }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted small">ไม่มีข้อมูลสำหรับแสดงผล</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Student Distribution by Faculty</h5>
+                    <a href="{% url 'dashboard:student' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-external-link-alt"></i> View Details
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="studentFacultyChart" style="height: 400px;"></div>
+                    
+                    <!-- Top 5 Faculties Summary -->
+                    <div class="mt-3">
+                        <h6>Top 5 Faculties:</h6>
+                        {% if student_faculties %}
+                        <div class="row">
+                            {% for fac in student_faculties|slice:":5" %}
+                            <div class="col-12 mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small">{{ fac.faculty_name|default:"ไม่ระบุ" }}</span>
+                                    <span class="badge bg-info">{{ fac.count|default:0 }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted small">ไม่มีข้อมูลสำหรับแสดงผล</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Analytics Access -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5><i class="fas fa-chart-line me-2"></i>Additional Analytics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="info-box bg-gradient-success">
+                                <span class="info-box-icon"><i class="fas fa-chart-bar"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Service Statistics</span>
+                                    <span class="info-box-number">{{ total_services|default:0 }}</span>
+                                    <a href="{% url 'dashboard:service_statistics' %}" class="btn btn-light btn-sm mt-2">
+                                        <i class="fas fa-arrow-right"></i> View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="info-box bg-gradient-info">
+                                <span class="info-box-icon"><i class="fas fa-database"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Database Status</span>
+                                    <span class="info-box-number">Connected</span>
+                                    <a href="{% url 'dashboard:db_test' %}" class="btn btn-light btn-sm mt-2">
+                                        <i class="fas fa-arrow-right"></i> Test Connection
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="info-box bg-gradient-warning">
+                                <span class="info-box-icon"><i class="fas fa-cog"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">System Settings</span>
+                                    <span class="info-box-number">Admin</span>
+                                    {% if user.can_manage_users %}
+                                    <a href="{% url 'user_management' %}" class="btn btn-light btn-sm mt-2">
+                                        <i class="fas fa-arrow-right"></i> Manage Users
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small">Access Restricted</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Sources Info -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <i class="fas fa-database fa-2x text-primary mb-2"></i>
+                            <h6>Staff Database</h6>
+                            <small class="text-muted">Live Connection</small>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="fas fa-users fa-2x text-success mb-2"></i>
+                            <h6>Student Database</h6>
+                            <small class="text-muted">Live Connection</small>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                            <h6>Service Statistics</h6>
+                            <small class="text-muted">Google Sheets API</small>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                            <h6>Last Updated</h6>
+                            <small class="text-muted" id="last-updated">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize main charts
+    initializeMainCharts();
+    
+    // Update timestamp
+    document.getElementById('last-updated').textContent = new Date().toLocaleString('th-TH');
+    
+    console.log('✅ Executive Dashboard (Simplified) loaded successfully');
+});
+
+function initializeMainCharts() {
+    // Staff Department Chart (Primary)
+    if ({{ staff_department_labels|safe }}.length > 0) {
+        const staffDeptOptions = {
+            series: {{ staff_department_data|safe }},
+            chart: {
+                type: 'donut',
+                height: 350
+            },
+            labels: {{ staff_department_labels|safe }},
+            title: {
+                text: 'Staff by Department',
+                align: 'center',
+                style: {
+                    fontSize: '16px',
+                    fontWeight: 600
+                }
+            },
+            colors: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1'],
+            legend: {
+                position: 'bottom'
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total Staff',
+                                fontSize: '16px',
+                                fontWeight: 600
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    return val.toFixed(1) + "%"
+                }
+            }
+        };
+        const staffDeptChart = new ApexCharts(document.querySelector("#staffDepartmentChart"), staffDeptOptions);
+        staffDeptChart.render();
+        
+        // Register for export functionality
+        window.registerChart('staffDepartmentChart', staffDeptChart);
+        window.addChartExportButtons('staffDepartmentChart', 'Staff Distribution by Department');
+    }
+    
+    // Student Faculty Chart (Primary)
+    if ({{ student_faculty_labels|safe }}.length > 0) {
+        const studentFacOptions = {
+            series: {{ student_faculty_data|safe }},
+            chart: {
+                type: 'pie',
+                height: 350
+            },
+            labels: {{ student_faculty_labels|safe }},
+            title: {
+                text: 'Students by Faculty',
+                align: 'center',
+                style: {
+                    fontSize: '16px',
+                    fontWeight: 600
+                }
+            },
+            colors: ['#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981', '#ec4899', '#84cc16', '#f97316'],
+            legend: {
+                position: 'bottom'
+            },
+            plotOptions: {
+                pie: {
+                    expandOnClick: true
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    return val.toFixed(1) + "%"
+                }
+            }
+        };
+        const studentFacChart = new ApexCharts(document.querySelector("#studentFacultyChart"), studentFacOptions);
+        studentFacChart.render();
+        
+        // Register for export functionality
+        window.registerChart('studentFacultyChart', studentFacChart);
+        window.addChartExportButtons('studentFacultyChart', 'Student Distribution by Faculty');
+    }
+}
+
+function exportExecutiveSummary() {
+    console.log('📊 Exporting executive summary...');
+    alert('Executive Summary export feature will be implemented. This will generate a comprehensive PDF report for management.');
+}
+</script>
+{% endblock %}

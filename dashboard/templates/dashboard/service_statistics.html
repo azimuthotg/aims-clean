@@ -1,65 +1,85 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}สถิติงานบริการ{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">สถิติงานบริการ</h1>
-    
-    <!-- สรุปข้อมูล Card -->
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">สถิติงานบริการ</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">หน้าหลัก</a></li>
+                        <li class="breadcrumb-item active">สถิติงานบริการ</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info boxes -->
     <div class="row">
-        <div class="col-md-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">จำนวนผู้ใช้บริการปี 2567</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ summary.total_2567 }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-gradient-primary elevation-1">
+                    <i class="fas fa-calendar"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">ปี 2567</span>
+                    <span class="info-box-number">{{ summary.total_2567|intcomma }}</span>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" style="width: 70%"></div>
                     </div>
+                    <span class="progress-description">ผู้ใช้บริการทั้งหมด</span>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">จำนวนผู้ใช้บริการปี 2568</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ summary.total_2568 }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-gradient-success elevation-1">
+                    <i class="fas fa-calendar-alt"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">ปี 2568</span>
+                    <span class="info-box-number">{{ summary.total_2568|intcomma }}</span>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: {% if summary.total_2568 > summary.total_2567 %}100{% else %}50{% endif %}%"></div>
                     </div>
+                    <span class="progress-description">ผู้ใช้บริการทั้งหมด</span>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">การเปลี่ยนแปลง</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% if summary.diff_percent > 0 %}
-                                    <span class="text-success">+{{ summary.diff_percent|floatformat:2 }}%</span>
-                                {% elif summary.diff_percent < 0 %}
-                                    <span class="text-danger">{{ summary.diff_percent|floatformat:2 }}%</span>
-                                {% else %}
-                                    <span>0%</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon {% if summary.diff_percent >= 0 %}bg-gradient-info{% else %}bg-gradient-warning{% endif %} elevation-1">
+                    {% if summary.diff_percent >= 0 %}
+                        <i class="fas fa-arrow-up"></i>
+                    {% else %}
+                        <i class="fas fa-arrow-down"></i>
+                    {% endif %}
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">การเปลี่ยนแปลง</span>
+                    <span class="info-box-number">
+                        {% if summary.diff_percent > 0 %}
+                            +{{ summary.diff_percent|floatformat:2 }}%
+                        {% elif summary.diff_percent < 0 %}
+                            {{ summary.diff_percent|floatformat:2 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </span>
+                    <div class="progress">
+                        <div class="progress-bar {% if summary.diff_percent >= 0 %}bg-info{% else %}bg-warning{% endif %}" 
+                             style="width: {% if summary.diff_percent >= 0 %}{{ summary.diff_percent|add:50 }}{% else %}{{ summary.diff_percent|add:50 }}{% endif %}%"></div>
                     </div>
+                    <span class="progress-description">เปรียบเทียบกับปีก่อน</span>
                 </div>
             </div>
         </div>
@@ -68,14 +88,15 @@
     <!-- กราฟเปรียบเทียบ -->
     <div class="row mt-4">
         <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">เปรียบเทียบจำนวนผู้ใช้บริการรายเดือน ปี 2567 vs 2568</h6>
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h5 class="m-0 font-weight-bold">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        เปรียบเทียบจำนวนผู้ใช้บริการรายเดือน ปี 2567 vs 2568
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="monthlyComparisonChart"></canvas>
-                    </div>
+                <div class="card-body p-4">
+                    <div id="monthlyComparisonChart" style="height: 400px;"></div>
                 </div>
             </div>
         </div>
@@ -84,31 +105,37 @@
     <!-- ตารางข้อมูล -->
     <div class="row">
         <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">ข้อมูลปี 2567</h6>
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="m-0 font-weight-bold">
+                        <i class="fas fa-table me-2"></i>ข้อมูลปี 2567
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered" width="100%" cellspacing="0">
-                            <thead>
+                        <table class="table table-hover table-striped">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>เดือน</th>
-                                    <th>จำนวนผู้ใช้บริการ</th>
+                                    <th><i class="fas fa-calendar me-1"></i>เดือน</th>
+                                    <th class="text-end"><i class="fas fa-users me-1"></i>จำนวนผู้ใช้บริการ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in data_2567 %}
                                 <tr>
                                     <td>{{ item.month }}</td>
-                                    <td>{{ item.visit_count }}</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-primary rounded-pill">{{ item.visit_count|intcomma }}</span>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             <tfoot>
-                                <tr>
-                                    <th>รวม</th>
-                                    <th>{{ summary.total_2567 }}</th>
+                                <tr class="table-primary fw-bold">
+                                    <th><i class="fas fa-calculator me-1"></i>รวม</th>
+                                    <th class="text-end">
+                                        <span class="badge bg-dark rounded-pill fs-6">{{ summary.total_2567|intcomma }}</span>
+                                    </th>
                                 </tr>
                             </tfoot>
                         </table>
@@ -118,31 +145,37 @@
         </div>
         
         <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-success">ข้อมูลปี 2568</h6>
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="m-0 font-weight-bold">
+                        <i class="fas fa-table me-2"></i>ข้อมูลปี 2568
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered" width="100%" cellspacing="0">
-                            <thead>
+                        <table class="table table-hover table-striped">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>เดือน</th>
-                                    <th>จำนวนผู้ใช้บริการ</th>
+                                    <th><i class="fas fa-calendar me-1"></i>เดือน</th>
+                                    <th class="text-end"><i class="fas fa-users me-1"></i>จำนวนผู้ใช้บริการ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in data_2568 %}
                                 <tr>
                                     <td>{{ item.month }}</td>
-                                    <td>{{ item.visit_count }}</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success rounded-pill">{{ item.visit_count|intcomma }}</span>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             <tfoot>
-                                <tr>
-                                    <th>รวม</th>
-                                    <th>{{ summary.total_2568 }}</th>
+                                <tr class="table-success fw-bold">
+                                    <th><i class="fas fa-calculator me-1"></i>รวม</th>
+                                    <th class="text-end">
+                                        <span class="badge bg-dark rounded-pill fs-6">{{ summary.total_2568|intcomma }}</span>
+                                    </th>
                                 </tr>
                             </tfoot>
                         </table>
@@ -151,48 +184,163 @@
             </div>
         </div>
     </div>
-</div>
+
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // สร้างกราฟเปรียบเทียบรายเดือน
-    document.addEventListener('DOMContentLoaded', function() {
-        var ctx = document.getElementById('monthlyComparisonChart').getContext('2d');
-        var monthlyChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: {{ chart_data.labels|safe }},
-                datasets: [
-                    {
-                        label: 'ปี 2567',
-                        data: {{ chart_data.data_2567|safe }},
-                        backgroundColor: 'rgba(78, 115, 223, 0.7)',
-                        borderColor: 'rgba(78, 115, 223, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'ปี 2568',
-                        data: {{ chart_data.data_2568|safe }},
-                        backgroundColor: 'rgba(28, 200, 138, 0.7)',
-                        borderColor: 'rgba(28, 200, 138, 1)',
-                        borderWidth: 1
-                    }
-                ]
+document.addEventListener('DOMContentLoaded', function() {
+    // ข้อมูลสำหรับกราฟ
+    const chartLabels = {{ chart_data.labels|safe }};
+    const data2567 = {{ chart_data.data_2567|safe }};
+    const data2568 = {{ chart_data.data_2568|safe }};
+    
+    // กราฟเปรียบเทียบรายเดือน - แบบ Column Chart
+    const comparisonOptions = {
+        ...window.chartConfig,
+        series: [
+            {
+                name: 'ปี 2567',
+                data: data2567
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+            {
+                name: 'ปี 2568', 
+                data: data2568
+            }
+        ],
+        chart: {
+            ...window.chartConfig.chart,
+            type: 'bar',
+            height: 400,
+            toolbar: {
+                show: false
+            }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                columnWidth: '65%',
+                borderRadius: 4,
+                dataLabels: {
+                    position: 'top'
                 }
             }
-        });
-    });
+        },
+        dataLabels: {
+            enabled: true,
+            offsetY: -20,
+            style: {
+                fontSize: '12px',
+                colors: ['#304758']
+            },
+            formatter: function(val) {
+                return window.chartUtils.formatDataLabelCompact(val);
+            }
+        },
+        stroke: {
+            show: true,
+            width: 2,
+            colors: ['transparent']
+        },
+        xaxis: {
+            categories: chartLabels,
+            title: {
+                text: 'เดือน',
+                style: {
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                }
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'จำนวนผู้ใช้บริการ',
+                style: {
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                }
+            },
+            labels: {
+                formatter: function (val) {
+                    return window.chartUtils.formatNumber(val);
+                }
+            }
+        },
+        colors: ['#2563eb', '#059669'],
+        fill: {
+            opacity: 0.8
+        },
+        legend: {
+            position: 'top',
+            horizontalAlign: 'center',
+            fontSize: '14px',
+            markers: {
+                width: 12,
+                height: 12,
+                radius: 6
+            }
+        },
+        title: {
+            text: 'เปรียบเทียบจำนวนผู้ใช้บริการรายเดือน',
+            align: 'center',
+            style: {
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: '#263238'
+            }
+        },
+        subtitle: {
+            text: 'ปี 2567 เทียบกับ ปี 2568',
+            align: 'center',
+            style: {
+                fontSize: '14px',
+                color: '#6c757d'
+            }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: {
+                formatter: function (val) {
+                    return window.chartUtils.formatNumber(val) + ' คน'
+                }
+            }
+        },
+        responsive: [{
+            breakpoint: 768,
+            options: {
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '80%'
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }]
+    };
+    
+    // สร้างและแสดงกราฟ
+    const comparisonChart = new ApexCharts(document.querySelector("#monthlyComparisonChart"), comparisonOptions);
+    comparisonChart.render();
+    
+    // Register chart for export functionality
+    window.registerChart('monthlyComparisonChart', comparisonChart);
+    
+    // Add export buttons
+    setTimeout(() => {
+        window.addChartExportButtons('monthlyComparisonChart', 'เปรียบเทียบจำนวนผู้ใช้บริการรายเดือน');
+    }, 500);
+    
+    // Debug logs
+    console.log('📊 Service Statistics Charts Loaded');
     console.log('Chart data:', {{ chart_data|safe }});
     console.log('Summary:', {{ summary|safe }});
+});
 </script>
 {% endblock %}

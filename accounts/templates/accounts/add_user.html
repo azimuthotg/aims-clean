@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}เพิ่มผู้ใช้ใหม่ - AIMS{% endblock %}
+
+{% block content %}
+<div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-user-plus"></i> เพิ่มผู้ใช้ใหม่
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'user_management' %}">จัดการผู้ใช้งาน</a></li>
+                        <li class="breadcrumb-item active">เพิ่มผู้ใช้ใหม่</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-8 offset-md-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-user-plus"></i> ข้อมูลผู้ใช้ใหม่
+                            </h3>
+                        </div>
+                        
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <!-- Basic Information -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="username">ชื่อผู้ใช้ <span class="text-danger">*</span></label>
+                                            <input type="text" name="username" id="username" class="form-control" 
+                                                   value="{{ form_data.username|default:'' }}" required>
+                                            <small class="form-text text-muted">ใช้สำหรับเข้าสู่ระบบ</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="email">อีเมล</label>
+                                            <input type="email" name="email" id="email" class="form-control" 
+                                                   value="{{ form_data.email|default:'' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="first_name">ชื่อ <span class="text-danger">*</span></label>
+                                            <input type="text" name="first_name" id="first_name" class="form-control" 
+                                                   value="{{ form_data.first_name|default:'' }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="last_name">นามสกุล <span class="text-danger">*</span></label>
+                                            <input type="text" name="last_name" id="last_name" class="form-control" 
+                                                   value="{{ form_data.last_name|default:'' }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Role and Permissions -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="user_role">บทบาทผู้ใช้ <span class="text-danger">*</span></label>
+                                            <select name="user_role" id="user_role" class="form-control" required>
+                                                {% for role_key, role_name in user_roles %}
+                                                    <option value="{{ role_key }}" 
+                                                        {% if form_data.user_role == role_key or role_key == 'academic_service' %}selected{% endif %}>
+                                                        {{ role_name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="phone">เบอร์โทรศัพท์</label>
+                                            <input type="text" name="phone" id="phone" class="form-control" 
+                                                   value="{{ form_data.phone|default:'' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Department Info -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="department">หน่วยงาน</label>
+                                            <input type="text" name="department" id="department" class="form-control" 
+                                                   value="{{ form_data.department|default:'สำนักวิทยบริการ' }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="division">แผนก</label>
+                                            <select name="division" id="division" class="form-control">
+                                                <option value="">--กรุณาเลือกแผนก--</option>
+                                                <option value="information_services" {% if form_data.division == 'information_services' %}selected{% endif %}>
+                                                    แผนกบริการสารสนเทศฯ
+                                                </option>
+                                                <option value="technical" {% if form_data.division == 'technical' %}selected{% endif %}>
+                                                    แผนกเทคนิคฯ
+                                                </option>
+                                                <option value="policy_planning" {% if form_data.division == 'policy_planning' %}selected{% endif %}>
+                                                    แผนกนโยบายและแผน
+                                                </option>
+                                                <option value="general_admin" {% if form_data.division == 'general_admin' %}selected{% endif %}>
+                                                    แผนกบริหารงานทั่วไป
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="position">ตำแหน่ง</label>
+                                            <input type="text" name="position" id="position" class="form-control" 
+                                                   value="{{ form_data.position|default:'' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- User Type -->
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="is_ldap_user" name="is_ldap_user" 
+                                               {% if form_data.is_ldap_user|default:True %}checked{% endif %}>
+                                        <label class="custom-control-label" for="is_ldap_user">
+                                            ผู้ใช้ LDAP (เข้าสู่ระบบผ่าน NPU)
+                                        </label>
+                                        <small class="form-text text-muted">
+                                            ติ๊กถ้าผู้ใช้สามารถเข้าสู่ระบบผ่าน LDAP ได้ ไม่ติ๊กหากต้องการตั้งรหัสผ่านเอง
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Password (for non-LDAP users) -->
+                                <div id="password-section" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="password">รหัสผ่าน</label>
+                                                <input type="password" name="password" id="password" class="form-control">
+                                                <small class="form-text text-muted">สำหรับผู้ใช้ที่ไม่ใช่ LDAP เท่านั้น</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="password_confirm">ยืนยันรหัสผ่าน</label>
+                                                <input type="password" name="password_confirm" id="password_confirm" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="form-group">
+                                    <label for="notes">หมายเหตุ</label>
+                                    <textarea name="notes" id="notes" class="form-control" rows="3" 
+                                              placeholder="หมายเหตุเพิ่มเติมเกี่ยวกับผู้ใช้นี้">{{ form_data.notes|default:'' }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="card-footer">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-save"></i> บันทึกผู้ใช้ใหม่
+                                        </button>
+                                        <a href="{% url 'user_management' %}" class="btn btn-secondary ml-2">
+                                            <i class="fas fa-times"></i> ยกเลิก
+                                        </a>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <small class="text-muted">
+                                            <span class="text-danger">*</span> ระบุข้อมูลที่จำเป็น
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle password section based on LDAP checkbox
+document.getElementById('is_ldap_user').addEventListener('change', function() {
+    const passwordSection = document.getElementById('password-section');
+    if (this.checked) {
+        passwordSection.style.display = 'none';
+        document.getElementById('password').required = false;
+        document.getElementById('password_confirm').required = false;
+    } else {
+        passwordSection.style.display = 'block';
+        document.getElementById('password').required = true;
+        document.getElementById('password_confirm').required = true;
+    }
+});
+
+// Initialize password section visibility
+document.addEventListener('DOMContentLoaded', function() {
+    const isLdapUser = document.getElementById('is_ldap_user').checked;
+    if (!isLdapUser) {
+        document.getElementById('password-section').style.display = 'block';
+        document.getElementById('password').required = true;
+        document.getElementById('password_confirm').required = true;
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('password_confirm').value;
+    const isLdapUser = document.getElementById('is_ldap_user').checked;
+    
+    if (!isLdapUser && password !== passwordConfirm) {
+        alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+        e.preventDefault();
+        return false;
+    }
+    
+    if (!isLdapUser && password.length < 6) {
+        alert('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+{% endblock %}

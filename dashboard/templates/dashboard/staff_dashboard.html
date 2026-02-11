@@ -1,95 +1,108 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}ข้อมูลบุคลากร - Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="h3">Dashboard ข้อมูลบุคลากร</h1>
-            <p class="text-muted">แสดงข้อมูลสถิติและการวิเคราะห์บุคลากรทั้งหมดของมหาวิทยาลัยนครพนม</p>
-        </div>
-        <div class="col-auto">
-            <a href="{% url 'dashboard:home' %}" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-left me-1"></i> กลับไปหน้าหลัก
-            </a>
-        </div>
-    </div>
     
-    <!-- แถวแรก: การ์ดสรุปตัวเลข -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-primary text-white mb-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">บุคลากรทั้งหมด</h6>
-                            <h2 class="mb-0">{{ total_staff }}</h2>
-                        </div>
-                        <div>
-                            <i class="fas fa-users fa-3x"></i>
-                        </div>
-                    </div>
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Dashboard ข้อมูลบุคลากร</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/executive/">หน้าหลัก</a></li>
+                        <li class="breadcrumb-item active">ข้อมูลบุคลากร</li>
+                    </ol>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- แถวที่สอง: กราฟแท่ง/วงกลม -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title">จำนวนบุคลากรตามหน่วยงาน (10 อันดับแรก)</h5>
+
+    <!-- Summary Statistics -->
+    <div class="row">
+        <div class="col-lg-6 col-md-6">
+            <div class="small-box bg-gradient-primary">
+                <div class="inner">
+                    <h3>{{ total_staff|intcomma }}</h3>
+                    <p>บุคลากรทั้งหมด</p>
                 </div>
-                <div class="card-body">
-                    <canvas id="departmentChart" height="300"></canvas>
+                <div class="icon">
+                    <i class="fas fa-users"></i>
                 </div>
+                <div class="small-box-footer">ข้อมูลทั้งหมด <i class="fas fa-check-circle"></i></div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title">สัดส่วนบุคลากรตามเพศ</h5>
+        
+        <div class="col-lg-6 col-md-6">
+            <div class="small-box bg-gradient-success">
+                <div class="inner">
+                    <h3>{{ total_departments }}</h3>
+                    <p>หน่วยงานทั้งหมด</p>
                 </div>
-                <div class="card-body">
-                    <canvas id="genderChart" height="300"></canvas>
+                <div class="icon">
+                    <i class="fas fa-building"></i>
                 </div>
+                <div class="small-box-footer">แสดงครบถ้วน <i class="fas fa-table"></i></div>
             </div>
         </div>
     </div>
     
-    <!-- แถวที่สาม: กราฟวงกลมและตาราง -->
+    
+    <!-- All Departments Table -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title">ประเภทบุคลากร</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="staffTypeChart" height="300"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">จำนวนบุคลากรตามหน่วยงาน</h5>
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        ข้อมูลบุคลากรตามหน่วยงาน ({{ total_departments }} หน่วยงาน)
+                    </h5>
+                    <button type="button" class="btn btn-light btn-sm" onclick="exportAllDepartments()">
+                        <i class="fas fa-download me-1"></i> Export ทั้งหมด
+                    </button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                        <table class="table table-hover table-striped">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>หน่วยงาน</th>
-                                    <th class="text-end">จำนวน</th>
+                                    <th width="8%">ลำดับ</th>
+                                    <th><i class="fas fa-building me-1"></i>หน่วยงาน</th>
+                                    <th class="text-end" width="12%">จำนวน</th>
+                                    <th class="text-center" width="15%">สัดส่วน</th>
+                                    <th class="text-center" width="20%">แสดงสัดส่วน</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for dept in departments %}
+                                {% for dept in all_departments %}
                                 <tr>
-                                    <td>{{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}</td>
-                                    <td class="text-end">{{ dept.count }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">{{ forloop.counter }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'dashboard:department_detail' dept.DEPARTMENTNAME %}" 
+                                           class="text-decoration-none fw-bold text-primary">
+                                            {{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}
+                                        </a>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success fs-6">{{ dept.count|intcomma }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fw-bold text-primary">{% widthratio dept.count total_staff 100 %}%</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-primary" 
+                                                 style="width: {% widthratio dept.count total_staff 100 %}%">
+                                                {% widthratio dept.count total_staff 100 %}%
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -99,84 +112,32 @@
             </div>
         </div>
     </div>
-</div>
+
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // ข้อมูลสำหรับกราฟแท่งแสดงบุคลากรตามหน่วยงาน
-    var departmentLabels = {{ department_labels|safe }};
-    var departmentData = {{ department_data|safe }};
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Staff Dashboard (Table Only) loaded successfully');
     
-    // ข้อมูลสำหรับกราฟวงกลมแสดงสัดส่วนบุคลากรตามเพศ
-    var genderLabels = {{ gender_labels|safe }};
-    var genderData = {{ gender_data|safe }};
-    
-    // ข้อมูลสำหรับกราฟวงกลมแสดงประเภทบุคลากร
-    var staffTypeLabels = {{ staff_type_labels|safe }};
-    var staffTypeData = {{ staff_type_data|safe }};
-    
-    // สร้างกราฟแท่งสำหรับข้อมูลตามหน่วยงาน
-    var departmentCtx = document.getElementById('departmentChart').getContext('2d');
-    var departmentChart = new Chart(departmentCtx, {
-        type: 'bar',
-        data: {
-            labels: departmentLabels,
-            datasets: [{
-                label: 'จำนวนบุคลากร',
-                data: departmentData,
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            scales: {
-                x: {
-                    beginAtZero: true
-                }
-            }
+    // Export function for all departments table
+    window.exportAllDepartments = function() {
+        const tableData = [];
+        {% for dept in all_departments %}
+        tableData.push({
+            'ลำดับ': {{ forloop.counter }},
+            'หน่วยงาน': '{{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}',
+            'จำนวน': {{ dept.count|default:0 }},
+            'สัดส่วน': '{% widthratio dept.count total_staff 100 %}%'
+        });
+        {% endfor %}
+        
+        if (window.chartUtils && window.chartUtils.exportChart) {
+            window.chartUtils.exportChart.toCSV(tableData, 'ข้อมูลบุคลากรทุกหน่วยงาน');
+        } else {
+            console.log('📊 Export functionality not available');
         }
-    });
-    
-    // สร้างกราฟวงกลมสำหรับสัดส่วนบุคลากรตามเพศ
-    var genderCtx = document.getElementById('genderChart').getContext('2d');
-    var genderChart = new Chart(genderCtx, {
-        type: 'pie',
-        data: {
-            labels: genderLabels,
-            datasets: [{
-                data: genderData,
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(255, 206, 86, 0.7)'
-                ],
-                borderWidth: 1
-            }]
-        }
-    });
-    
-    // สร้างกราฟวงกลมสำหรับประเภทบุคลากร
-    var staffTypeCtx = document.getElementById('staffTypeChart').getContext('2d');
-    var staffTypeChart = new Chart(staffTypeCtx, {
-        type: 'pie',
-        data: {
-            labels: staffTypeLabels,
-            datasets: [{
-                data: staffTypeData,
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(153, 102, 255, 0.7)',
-                    'rgba(255, 159, 64, 0.7)',
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(54, 162, 235, 0.7)'
-                ],
-                borderWidth: 1
-            }]
-        }
-    });
+    };
+});
 </script>
 {% endblock %}

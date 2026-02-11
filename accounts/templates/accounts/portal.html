@@ -1,64 +1,261 @@
 {% extends 'base.html' %}
 
-{% block title %}Portal - Academic Information Management System{% endblock %}
+{% block title %}Portal - AIMS Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+.system-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+}
+
+.system-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.system-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+}
+
+.role-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 0.75rem;
+}
+
+.system-card .card-body {
+    position: relative;
+    padding: 2rem 1.5rem;
+}
+
+.system-card .card-footer {
+    padding: 1rem 1.5rem;
+}
+
+.welcome-section {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .system-icon {
+        font-size: 3rem;
+    }
+    
+    .system-card .card-body {
+        padding: 1.5rem 1rem;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="h3">ยินดีต้อนรับ, {{ user.get_full_name|default:user.username }}</h1>
-            <p class="text-muted">โปรดเลือกระบบที่ต้องการใช้งาน</p>
-        </div>
-    </div>
-    
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        <!-- SmartForm Card -->
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-file-alt fa-4x mb-3 text-primary"></i>
-                    <h5 class="card-title">SmartForm</h5>
-                    <p class="card-text">ระบบจัดการเอกสารอิเล็กทรอนิกส์ สำหรับบันทึกและติดตามเอกสารต่างๆ</p>
-                </div>
-                <div class="card-footer bg-transparent border-top-0">
-                    <div class="d-grid">
-                        <a href="#" class="btn btn-primary">เข้าใช้งาน</a>
-                    </div>
-                </div>
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-home"></i> AIMS Hub Portal
+                </h1>
             </div>
-        </div>
-        
-        <!-- Dashboard Card -->
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-tachometer-alt fa-4x mb-3 text-success"></i>
-                    <h5 class="card-title">Dashboard</h5>
-                    <p class="card-text">ระบบรายงานและแสดงผลข้อมูลสรุปสำหรับผู้บริหารและเจ้าหน้าที่123456</p>
-                </div>
-                <div class="card-footer bg-transparent border-top-0">
-                    <div class="d-grid">
-                        <a href="{% url 'dashboard:home' %}" class="btn btn-success">เข้าใช้งาน</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Reports Card -->
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-chart-bar fa-4x mb-3 text-warning"></i>
-                    <h5 class="card-title">Reports</h5>
-                    <p class="card-text">ระบบรายงานเชิงวิเคราะห์และสถิติข้อมูลต่างๆ</p>
-                </div>
-                <div class="card-footer bg-transparent border-top-0">
-                    <div class="d-grid">
-                        <a href="#" class="btn btn-warning">เข้าใช้งาน</a>
-                    </div>
-                </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">Portal</li>
+                </ol>
             </div>
         </div>
     </div>
 </div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <div class="user-info">
+                <div class="user-avatar">
+                    {{ user.first_name|first|default:user.username|first|upper }}
+                </div>
+                <div>
+                    <h2 class="mb-1">ยินดีต้อนรับ, {{ user.get_full_name|default:user.username }}</h2>
+                    <p class="mb-1">{{ user.get_role_display_thai }} | {{ user.department|default:"ไม่ระบุหน่วยงาน" }}</p>
+                    {% if user.division %}
+                        <small class="opacity-75">{{ user.get_division_display_thai }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Systems Grid -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-th-large"></i> ระบบที่คุณสามารถเข้าใช้งานได้
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        {% if accessible_systems %}
+                            <div class="row">
+                                {% for system in accessible_systems %}
+                                <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                                    <div class="card system-card h-100">
+                                        <span class="badge role-badge 
+                                            {% if system.role == 'admin' %}badge-danger
+                                            {% elif system.role == 'creator' or system.role == 'uploader' or system.role == 'analyst' %}badge-warning
+                                            {% elif system.role == 'approver' %}badge-info
+                                            {% else %}badge-secondary{% endif %}">
+                                            {{ system.role|upper }}
+                                        </span>
+                                        
+                                        <div class="card-body text-center">
+                                            <i class="{{ system.icon }} system-icon 
+                                                {% if system.code == 'aims' %}text-primary
+                                                {% elif system.code == 'dashboard' %}text-success
+                                                {% elif system.code == 'document' %}text-info
+                                                {% elif system.code == 'planning' %}text-warning
+                                                {% elif system.code == 'library' %}text-purple
+                                                {% else %}text-secondary{% endif %}">
+                                            </i>
+                                            
+                                            <h5 class="card-title">{{ system.name }}</h5>
+                                            
+                                            <p class="card-text text-muted">
+                                                {% if system.code == 'aims' %}
+                                                    ระบบจัดการข้อมูลวิชาการและผู้ใช้งาน
+                                                {% elif system.code == 'dashboard' %}
+                                                    ระบบสถิติและรายงานข้อมูลเชิงวิเคราะห์
+                                                {% elif system.code == 'document' %}
+                                                    ระบบสารบรรณอิเล็กทรอนิกส์และเอกสาร
+                                                {% elif system.code == 'planning' %}
+                                                    ระบบจัดการแผนงานและโครงการ
+                                                {% elif system.code == 'library' %}
+                                                    ระบบจัดการห้องสมุดและทรัพยากร
+                                                {% elif system.code == 'finance' %}
+                                                    ระบบการเงินและงบประมาณ
+                                                {% else %}
+                                                    ระบบสำหรับการจัดการข้อมูล
+                                                {% endif %}
+                                            </p>
+                                            
+                                            <div class="mt-3">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-server"></i> Port {{ system.port }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="card-footer bg-transparent border-top-0">
+                                            <div class="d-grid">
+                                                {% if system.code == 'aims' %}
+                                                    <a href="{{ system.url }}" class="btn btn-primary">
+                                                        <i class="fas fa-home"></i> เข้าใช้งาน
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{{ system.url }}" class="btn btn-outline-primary" target="_blank">
+                                                        <i class="fas fa-external-link-alt"></i> เข้าใช้งาน
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                                <h4>ไม่มีระบบที่สามารถเข้าใช้งานได้</h4>
+                                <p class="text-muted">กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์การเข้าใช้งาน</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Info -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info">
+                        <i class="fas fa-user-clock"></i>
+                    </span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">เข้าใช้ล่าสุด</span>
+                        <span class="info-box-number">
+                            {% if user.last_login %}
+                                {{ user.last_login|date:"d/m/Y H:i" }}
+                            {% else %}
+                                ยังไม่เคยเข้าใช้
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success">
+                        <i class="fas fa-shield-alt"></i>
+                    </span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">ระดับสิทธิ์</span>
+                        <span class="info-box-number">{{ user.get_role_display_thai }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-generate SSO token when user accesses portal
+document.addEventListener('DOMContentLoaded', function() {
+    // Update last activity
+    fetch('{% url "update_last_activity" %}', {
+        method: 'POST',  
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        }
+    });
+    
+    // Generate SSO token for seamless access to other systems
+    generateSSOToken();
+});
+
+function generateSSOToken() {
+    // This will be used when user clicks on external system links
+    // Token will be set in cookie for SSO
+    console.log('Portal loaded for user: {{ user.username }}');
+}
+</script>
 {% endblock %}
