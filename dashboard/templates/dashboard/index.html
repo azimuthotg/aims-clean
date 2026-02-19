@@ -1,65 +1,77 @@
 {% extends 'base.html' %}
 {% comment %} aims_project/dashboard/templates/dashboard/index.html {% endcomment %}
 
-{% block title %}Dashboard - Academic Information Management System{% endblock %}
+{% block title %}Dashboard - AIMS{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-slate-700 font-medium">Dashboard</span>
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="h3">Dashboard ระบบสารสนเทศ</h1>
-            <p class="text-muted">กรุณาเลือกประเภทข้อมูลที่ต้องการดู</p>
-        </div>
-    </div>
-    
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        <!-- บุคลากร Card -->
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-user-tie fa-4x mb-3 text-primary"></i>
-                    <h5 class="card-title">ข้อมูลบุคลากร</h5>
-                    <p class="card-text">สถิติและการวิเคราะห์ข้อมูลบุคลากรทั้งหมดของมหาวิทยาลัย</p>
-                </div>
-                <div class="card-footer bg-transparent border-top-0">
-                    <div class="d-grid">
-                        <a href="{% url 'dashboard:staff' %}" class="btn btn-primary">เข้าชมข้อมูล</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- นักศึกษา Card -->
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-user-graduate fa-4x mb-3 text-success"></i>
-                    <h5 class="card-title">ข้อมูลนักศึกษา</h5>
-                    <p class="card-text">สถิติและการวิเคราะห์ข้อมูลนักศึกษาทั้งหมดของมหาวิทยาลัย</p>
-                </div>
-                <div class="card-footer bg-transparent border-top-0">
-                    <div class="d-grid">
-                        <a href="{% url 'dashboard:student' %}" class="btn btn-success">เข้าชมข้อมูล</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- สถิติงานบริการ Card (เพิ่มใหม่) -->
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-chart-bar fa-4x mb-3 text-info"></i>
-                    <h5 class="card-title">สถิติงานบริการ</h5>
-                    <p class="card-text">ข้อมูลสถิติและการเปรียบเทียบจำนวนผู้ใช้บริการตามช่วงเวลา</p>
-                </div>
-                <div class="card-footer bg-transparent border-top-0">
-                    <div class="d-grid">
-                        <a href="{% url 'dashboard:service_statistics' %}" class="btn btn-info">เข้าชมข้อมูล</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
+<!-- Page Header -->
+<div class="mb-6">
+    <h1 class="text-xl font-bold text-slate-900">Dashboard ระบบสารสนเทศ</h1>
+    <p class="text-sm text-slate-500 mt-1">กรุณาเลือกประเภทข้อมูลที่ต้องการดู</p>
 </div>
+
+<!-- Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <!-- บุคลากร -->
+    <div class="bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 overflow-hidden group">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-100 transition-colors">
+                <i class="fas fa-user-tie text-3xl text-blue-600"></i>
+            </div>
+            <h2 class="text-base font-semibold text-slate-900 mb-2">ข้อมูลบุคลากร</h2>
+            <p class="text-sm text-slate-500 leading-relaxed mb-6">
+                สถิติและการวิเคราะห์ข้อมูลบุคลากรทั้งหมดของมหาวิทยาลัย
+            </p>
+            <a href="{% url 'dashboard:staff' %}"
+               class="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-medium
+                      bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                <i class="fas fa-chart-bar"></i>เข้าชมข้อมูล
+            </a>
+        </div>
+    </div>
+
+    <!-- นักศึกษา -->
+    <div class="bg-white rounded-xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200 overflow-hidden group">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4 group-hover:bg-emerald-100 transition-colors">
+                <i class="fas fa-user-graduate text-3xl text-emerald-600"></i>
+            </div>
+            <h2 class="text-base font-semibold text-slate-900 mb-2">ข้อมูลนักศึกษา</h2>
+            <p class="text-sm text-slate-500 leading-relaxed mb-6">
+                สถิติและการวิเคราะห์ข้อมูลนักศึกษาทั้งหมดของมหาวิทยาลัย
+            </p>
+            <a href="{% url 'dashboard:student' %}"
+               class="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-medium
+                      bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+                <i class="fas fa-chart-bar"></i>เข้าชมข้อมูล
+            </a>
+        </div>
+    </div>
+
+    <!-- สถิติงานบริการ -->
+    <div class="bg-white rounded-xl border border-slate-200 hover:border-sky-300 hover:shadow-md transition-all duration-200 overflow-hidden group">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-sky-50 flex items-center justify-center mx-auto mb-4 group-hover:bg-sky-100 transition-colors">
+                <i class="fas fa-clipboard-list text-3xl text-sky-600"></i>
+            </div>
+            <h2 class="text-base font-semibold text-slate-900 mb-2">สถิติงานบริการ</h2>
+            <p class="text-sm text-slate-500 leading-relaxed mb-6">
+                ข้อมูลสถิติและการเปรียบเทียบจำนวนผู้ใช้บริการตามช่วงเวลา
+            </p>
+            <a href="{% url 'dashboard:service_statistics' %}"
+               class="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-medium
+                      bg-sky-600 text-white hover:bg-sky-700 transition-colors">
+                <i class="fas fa-chart-bar"></i>เข้าชมข้อมูล
+            </a>
+        </div>
+    </div>
+
+</div>
+
 {% endblock %}

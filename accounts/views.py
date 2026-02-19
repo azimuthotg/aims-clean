@@ -21,18 +21,18 @@ def login_view(request):
     View สำหรับหน้า Login
     """
     if request.user.is_authenticated:
-        return redirect('portal')
-        
+        return redirect('dashboard:home')
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        
+
         user = authenticate(request, username=username, password=password)
-        
+
         if user is not None:
             login(request, user)
             messages.success(request, 'เข้าสู่ระบบสำเร็จ')
-            return redirect('portal')
+            return redirect('dashboard:home')
         else:
             messages.error(request, 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง หรือคุณไม่มีสิทธิ์ในการเข้าใช้งานระบบนี้')
     
@@ -48,21 +48,8 @@ def logout_view(request):
 
 @login_required
 def portal_view(request):
-    """
-    View สำหรับหน้า Portal
-    """
-    if not request.user.is_authenticated:
-        return redirect('login')
-    
-    # ดึงรายการระบบที่ผู้ใช้เข้าได้
-    accessible_systems = request.user.get_accessible_systems()
-    
-    context = {
-        'accessible_systems': accessible_systems,
-        'user': request.user
-    }
-        
-    return render(request, 'accounts/portal.html', context)
+    """Redirect ไป dashboard โดยตรง (portal ไม่ได้ใช้แล้ว)"""
+    return redirect('dashboard:home')
 
 @csrf_exempt
 def test_ldap_api(request):

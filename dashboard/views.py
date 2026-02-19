@@ -1531,3 +1531,266 @@ def export_faculty_excel(request, faculty_name):
             return HttpResponse(f"เกิดข้อผิดพลาดในการบันทึก Excel: {e}", status=500)
     else:
         return HttpResponse("ไม่มีสิทธิ์เข้าถึง", status=403)
+
+
+@login_required
+def export_staff_excel(request):
+    """
+    Export ข้อมูลบุคลากรภาพรวม เป็น Excel
+    4 Sheets: สรุปภาพรวม, หน่วยงาน, ประเภทบุคลากร, เพศ
+    """
+    if not OPENPYXL_AVAILABLE:
+        return HttpResponse("ไม่สามารถ Export ได้ - กรุณาติดตั้ง openpyxl: pip install openpyxl", status=500)
+
+    summary = get_staff_summary()
+    if not summary:
+        return HttpResponse("ไม่สามารถดึงข้อมูลบุคลากรได้", status=500)
+
+    wb = Workbook()
+    wb.remove(wb.active)
+
+    header_font = Font(name='Tahoma', size=12, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='2563EB', end_color='2563EB', fill_type='solid')
+    title_font  = Font(name='Tahoma', size=14, bold=True)
+    data_font   = Font(name='Tahoma', size=11)
+    bold_font   = Font(name='Tahoma', size=11, bold=True)
+    border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'),  bottom=Side(style='thin')
+    )
+    center = Alignment(horizontal='center', vertical='center')
+    left   = Alignment(horizontal='left',   vertical='center')
+
+    current_date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    total_staff  = summary['total_staff']
+    all_depts    = summary['department_distribution']
+    staff_types  = summary['staff_type_distribution']
+    genders      = summary['gender_distribution']
+
+    def write_headers(ws, headers, row=1):
+        for col, h in enumerate(headers, 1):
+            c = ws.cell(row=row, column=col, value=h)
+            c.font = header_font
+            c.fill = header_fill
+            c.border = border
+            c.alignment = center
+
+    def write_row(ws, row_num, values, font=None):
+        for col, v in enumerate(values, 1):
+            c = ws.cell(row=row_num, column=col, value=v)
+            c.font = font or data_font
+            c.border = border
+            c.alignment = center if isinstance(v, (int, float)) else left
+
+    # ========== Sheet 1: สรุปภาพรวม ==========
+    ws1 = wb.create_sheet("สรุปภาพรวม")
+    ws1['A1'] = "รายงานสรุปข้อมูลบุคลากร"
+    ws1['A1'].font = title_font
+    ws1['A2'] = f"วันที่ออกรายงาน: {current_date}"
+    ws1['A3'] = "ระบบ AIMS - Academic Information Management System"
+
+    write_headers(ws1, ["หัวข้อ", "จำนวน", "หน่วย"], row=5)
+    summary_rows = [
+        ("บุคลากรทั้งหมด",       total_staff,                                              "คน"),
+        ("จำนวนหน่วยงาน",        len(all_depts),                                           "หน่วยงาน"),
+        ("หน่วยงานใหญ่ (50+)",   sum(1 for d in all_depts if d['count'] >= 50),            "หน่วยงาน"),
+        ("หน่วยงานกลาง (10-49)", sum(1 for d in all_depts if 10 <= d['count'] < 50),       "หน่วยงาน"),
+        ("หน่วยงานเล็ก (<10)",   sum(1 for d in all_depts if 1 <= d['count'] < 10),        "หน่วยงาน"),
+        ("ประเภทบุคลากร",        len(staff_types),                                         "ประเภท"),
+    ]
+    for i, row in enumerate(summary_rows, 6):
+        write_row(ws1, i, row)
+    ws1.column_dimensions['A'].width = 28
+    ws1.column_dimensions['B'].width = 14
+    ws1.column_dimensions['C'].width = 12
+
+    # ========== Sheet 2: หน่วยงาน ==========
+    ws2 = wb.create_sheet("หน่วยงาน")
+    ws2['A1'] = f"บุคลากรจำแนกตามหน่วยงาน ({len(all_depts)} หน่วยงาน)"
+    ws2['A1'].font = title_font
+    ws2['A2'] = f"วันที่: {current_date}"
+
+    write_headers(ws2, ["ลำดับ", "ชื่อหน่วยงาน", "จำนวนบุคลากร", "สัดส่วน (%)"], row=4)
+    for i, dept in enumerate(all_depts, 1):
+        pct = round(dept['count'] / total_staff * 100, 2) if total_staff else 0
+        write_row(ws2, i + 4, [i, dept['DEPARTMENTNAME'] or 'ไม่ระบุ', dept['count'], pct])
+    total_row = len(all_depts) + 5
+    write_row(ws2, total_row, ["", "รวมทั้งหมด", total_staff, 100.0], font=bold_font)
+    ws2.column_dimensions['A'].width = 8
+    ws2.column_dimensions['B'].width = 45
+    ws2.column_dimensions['C'].width = 18
+    ws2.column_dimensions['D'].width = 14
+
+    # ========== Sheet 3: ประเภทบุคลากร ==========
+    ws3 = wb.create_sheet("ประเภทบุคลากร")
+    ws3['A1'] = "บุคลากรจำแนกตามประเภท"
+    ws3['A1'].font = title_font
+    ws3['A2'] = f"วันที่: {current_date}"
+
+    write_headers(ws3, ["ลำดับ", "ประเภทบุคลากร", "จำนวน", "สัดส่วน (%)"], row=4)
+    for i, stype in enumerate(staff_types, 1):
+        pct = round(stype['count'] / total_staff * 100, 2) if total_staff else 0
+        write_row(ws3, i + 4, [i, stype['STFTYPENAME'] or 'ไม่ระบุ', stype['count'], pct])
+    ws3.column_dimensions['A'].width = 8
+    ws3.column_dimensions['B'].width = 35
+    ws3.column_dimensions['C'].width = 12
+    ws3.column_dimensions['D'].width = 14
+
+    # ========== Sheet 4: เพศ ==========
+    ws4 = wb.create_sheet("เพศ")
+    ws4['A1'] = "บุคลากรจำแนกตามเพศ"
+    ws4['A1'].font = title_font
+    ws4['A2'] = f"วันที่: {current_date}"
+
+    write_headers(ws4, ["ลำดับ", "เพศ", "จำนวน", "สัดส่วน (%)"], row=4)
+    for i, gender in enumerate(genders, 1):
+        pct = round(gender['count'] / total_staff * 100, 2) if total_staff else 0
+        write_row(ws4, i + 4, [i, gender['GENDERNAMETH'] or 'ไม่ระบุ', gender['count'], pct])
+    ws4.column_dimensions['A'].width = 8
+    ws4.column_dimensions['B'].width = 15
+    ws4.column_dimensions['C'].width = 12
+    ws4.column_dimensions['D'].width = 14
+
+    filename = f"AIMS_บุคลากร_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
+
+
+@login_required
+def export_level_excel(request, level_name):
+    """
+    Export ข้อมูลระดับการศึกษาเฉพาะ เป็น Excel
+    3 Sheets: สรุปภาพรวม, สาขาวิชาจำแนกตามคณะ, เพศ
+    """
+    import urllib.parse
+    level_name = urllib.parse.unquote(level_name)
+
+    if not OPENPYXL_AVAILABLE:
+        return HttpResponse("ไม่สามารถ Export ได้ - กรุณาติดตั้ง openpyxl", status=500)
+
+    year_filter = request.GET.get('year')
+    if year_filter and year_filter.isdigit():
+        year_filter = int(year_filter)
+    else:
+        year_filter = None
+
+    level_info = get_level_detail(level_name, year_filter)
+    if not level_info:
+        return HttpResponse("ไม่สามารถดึงข้อมูลได้", status=500)
+
+    wb = Workbook()
+    wb.remove(wb.active)
+
+    header_font = Font(name='Tahoma', size=12, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='2563EB', end_color='2563EB', fill_type='solid')
+    title_font  = Font(name='Tahoma', size=14, bold=True)
+    data_font   = Font(name='Tahoma', size=11)
+    bold_font   = Font(name='Tahoma', size=11, bold=True)
+    border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'),  bottom=Side(style='thin')
+    )
+    center = Alignment(horizontal='center', vertical='center')
+    left   = Alignment(horizontal='left',   vertical='center')
+
+    current_date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    year_text = f"พ.ศ. {year_filter}" if year_filter else "ทุกปีการศึกษา"
+    total_students = level_info['total_students']
+
+    def write_headers(ws, headers, row=1):
+        for col, h in enumerate(headers, 1):
+            c = ws.cell(row=row, column=col, value=h)
+            c.font = header_font
+            c.fill = header_fill
+            c.border = border
+            c.alignment = center
+
+    def write_row(ws, row_num, values, font=None):
+        for col, v in enumerate(values, 1):
+            c = ws.cell(row=row_num, column=col, value=v)
+            c.font = font or data_font
+            c.border = border
+            c.alignment = center if isinstance(v, (int, float)) else left
+
+    # ========== Sheet 1: สรุปภาพรวม ==========
+    ws1 = wb.create_sheet("สรุปภาพรวม")
+    ws1['A1'] = f"รายงานสรุปข้อมูลนักศึกษา - {level_name}"
+    ws1['A1'].font = title_font
+    ws1['A2'] = f"ข้อมูล: {year_text}"
+    ws1['A3'] = f"วันที่ออกรายงาน: {current_date}"
+    ws1['A4'] = "ระบบ AIMS - Academic Information Management System"
+
+    write_headers(ws1, ["หัวข้อ", "จำนวน", "หน่วย"], row=6)
+    summary_rows = [
+        ("นักศึกษาทั้งหมด",       total_students,                                  "คน"),
+        ("จำนวนคณะ",               len(level_info['faculty_distribution']),          "คณะ"),
+        ("จำนวนสาขาวิชา",          level_info['total_programs'],                     "สาขา"),
+        ("ช่วงปีเข้าศึกษา",        len(level_info['year_distribution']),             "ปี"),
+    ]
+    for i, row in enumerate(summary_rows, 7):
+        write_row(ws1, i, row)
+    ws1.column_dimensions['A'].width = 25
+    ws1.column_dimensions['B'].width = 14
+    ws1.column_dimensions['C'].width = 10
+
+    # ========== Sheet 2: สาขาวิชาจำแนกตามคณะ ==========
+    ws2 = wb.create_sheet("สาขาวิชาจำแนกตามคณะ")
+    ws2['A1'] = f"สาขาวิชาจำแนกตามคณะ - {level_name}"
+    ws2['A1'].font = title_font
+    ws2['A2'] = f"ข้อมูล: {year_text}  |  วันที่: {current_date}"
+
+    write_headers(ws2, ["ลำดับ", "คณะ", "สาขาวิชา", "จำนวน (คน)", "สัดส่วน (%)"], row=4)
+
+    row_num = 5
+    seq = 1
+    for faculty_name, programs in level_info['faculty_programs'].items():
+        for prog in programs:
+            pct = round(prog['count'] / total_students * 100, 2) if total_students else 0
+            write_row(ws2, row_num, [seq, faculty_name, prog['program_name'] or 'ไม่ระบุ', prog['count'], pct])
+            row_num += 1
+            seq += 1
+        # Faculty subtotal row
+        ftotal = level_info['faculty_totals'].get(faculty_name, 0)
+        fpct = round(ftotal / total_students * 100, 2) if total_students else 0
+        write_row(ws2, row_num, ["", f"รวม {faculty_name}", "", ftotal, fpct], font=bold_font)
+        row_num += 1
+
+    # Grand total
+    write_row(ws2, row_num, ["", "รวมทั้งหมด", "", total_students, 100.0], font=bold_font)
+    ws2.column_dimensions['A'].width = 8
+    ws2.column_dimensions['B'].width = 40
+    ws2.column_dimensions['C'].width = 40
+    ws2.column_dimensions['D'].width = 14
+    ws2.column_dimensions['E'].width = 14
+
+    # ========== Sheet 3: เพศ ==========
+    ws3 = wb.create_sheet("เพศ")
+    ws3['A1'] = f"นักศึกษาจำแนกตามเพศ - {level_name}"
+    ws3['A1'].font = title_font
+    ws3['A2'] = f"วันที่: {current_date}"
+
+    write_headers(ws3, ["ลำดับ", "เพศ", "จำนวน (คน)", "สัดส่วน (%)"], row=4)
+    for i, gender in enumerate(level_info['gender_distribution'], 1):
+        pct = round(gender['count'] / total_students * 100, 2) if total_students else 0
+        write_row(ws3, i + 4, [i, gender['gender'] or 'ไม่ระบุ', gender['count'], pct])
+    ws3.column_dimensions['A'].width = 8
+    ws3.column_dimensions['B'].width = 15
+    ws3.column_dimensions['C'].width = 15
+    ws3.column_dimensions['D'].width = 14
+
+    safe_level = level_name.replace('/', '_').replace('\\', '_').replace(':', '_')
+    if year_filter:
+        filename = f"AIMS_{safe_level}_พ.ศ.{year_filter}_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    else:
+        filename = f"AIMS_{safe_level}_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response

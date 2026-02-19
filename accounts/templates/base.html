@@ -3,100 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Academic Information Management System{% endblock %}</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <title>{% block title %}AIMS - Academic Information Management System{% endblock %}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Sarabun', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Sarabun Thai font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        .navbar-brand img {
-            height: 40px;
-        }
-        .sidebar {
-            min-height: calc(100vh - 56px);
-        }
-        .content {
-            padding-top: 20px;
-        }
+        body { font-family: 'Sarabun', system-ui, sans-serif; }
+        /* Slim scrollbar for sidebar */
+        #sidebar-nav::-webkit-scrollbar { width: 4px; }
+        #sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+        #sidebar-nav::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
     </style>
-    
+
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                Academic System
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard:home' %}">
-                            <i class="fas fa-chart-bar"></i> Dashboard
-                        </a>
-                    </li>
-                    <!-- เพิ่มเมนูอื่นๆ ตามต้องการ -->
-                </ul>
-                
-                <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> {{ user.get_full_name|default:user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#">โปรไฟล์</a></li>
-                            <li><a class="dropdown-item" href="#">ตั้งค่า</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'logout' %}">ออกจากระบบ</a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">เข้าสู่ระบบ</a>
-                    </li>
-                    {% endif %}
-                </ul>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- ============================================================
+         SIDEBAR
+    ============================================================ -->
+    <aside class="fixed inset-y-0 left-0 w-60 bg-[#0f172a] flex flex-col z-50">
+
+        <!-- Brand -->
+        <div class="flex items-center h-16 px-5 border-b border-slate-700/60 flex-shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
+                <i class="fas fa-graduation-cap text-white text-sm"></i>
+            </div>
+            <div>
+                <span class="text-white font-bold text-base leading-none">AIMS</span>
+                <span class="block text-slate-400 text-xs leading-none mt-0.5">NPU Dashboard</span>
             </div>
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <div class="container-fluid">
+        <!-- Navigation -->
+        <nav id="sidebar-nav" class="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
+
+            <!-- Dashboard -->
+            <a href="{% url 'dashboard:home' %}"
+               class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
+               {% if request.resolver_match.url_name == 'home' %}
+                   bg-blue-600 text-white
+               {% else %}
+                   text-slate-400 hover:bg-slate-800 hover:text-white
+               {% endif %}">
+                <i class="fas fa-chart-bar w-5 text-center mr-3 {% if request.resolver_match.url_name == 'home' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
+                Dashboard
+            </a>
+
+            <!-- Section label -->
+            <div class="pt-5 pb-2">
+                <p class="text-xs font-semibold text-slate-600 uppercase tracking-wider px-3">ข้อมูล</p>
+            </div>
+
+            <!-- บุคลากร -->
+            <a href="{% url 'dashboard:staff' %}"
+               class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
+               {% if request.resolver_match.url_name == 'staff' or request.resolver_match.url_name == 'department_detail' %}
+                   bg-blue-600 text-white
+               {% else %}
+                   text-slate-400 hover:bg-slate-800 hover:text-white
+               {% endif %}">
+                <i class="fas fa-user-tie w-5 text-center mr-3 {% if request.resolver_match.url_name == 'staff' or request.resolver_match.url_name == 'department_detail' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
+                บุคลากร
+            </a>
+
+            <!-- นักศึกษา -->
+            <a href="{% url 'dashboard:student' %}"
+               class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
+               {% if request.resolver_match.url_name == 'student' or request.resolver_match.url_name == 'faculty_detail' or request.resolver_match.url_name == 'level_detail' %}
+                   bg-blue-600 text-white
+               {% else %}
+                   text-slate-400 hover:bg-slate-800 hover:text-white
+               {% endif %}">
+                <i class="fas fa-user-graduate w-5 text-center mr-3 {% if request.resolver_match.url_name == 'student' or request.resolver_match.url_name == 'faculty_detail' or request.resolver_match.url_name == 'level_detail' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
+                นักศึกษา
+            </a>
+
+            <!-- สถิติงานบริการ -->
+            <a href="{% url 'dashboard:service_statistics' %}"
+               class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
+               {% if request.resolver_match.url_name == 'service_statistics' %}
+                   bg-blue-600 text-white
+               {% else %}
+                   text-slate-400 hover:bg-slate-800 hover:text-white
+               {% endif %}">
+                <i class="fas fa-clipboard-list w-5 text-center mr-3 {% if request.resolver_match.url_name == 'service_statistics' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
+                สถิติงานบริการ
+            </a>
+
+            <!-- Admin Section (super_admin / staff_admin only) -->
+            {% if user.can_manage_users %}
+            <div class="pt-5 pb-2">
+                <p class="text-xs font-semibold text-slate-600 uppercase tracking-wider px-3">Admin</p>
+            </div>
+
+            <!-- จัดการผู้ใช้ -->
+            <a href="{% url 'user_management' %}"
+               class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
+               {% if request.resolver_match.url_name == 'user_management' or request.resolver_match.url_name == 'user_detail' or request.resolver_match.url_name == 'user_edit' or request.resolver_match.url_name == 'add_user' %}
+                   bg-blue-600 text-white
+               {% else %}
+                   text-slate-400 hover:bg-slate-800 hover:text-white
+               {% endif %}">
+                <i class="fas fa-users-gear w-5 text-center mr-3 {% if request.resolver_match.url_name == 'user_management' or request.resolver_match.url_name == 'user_detail' or request.resolver_match.url_name == 'user_edit' or request.resolver_match.url_name == 'add_user' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
+                จัดการผู้ใช้
+            </a>
+
+            <!-- Django Admin (super_admin only) -->
+            {% if user.user_role == 'super_admin' %}
+            <a href="/admin/" target="_blank"
+               class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
+                      text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fas fa-screwdriver-wrench w-5 text-center mr-3 text-slate-500 group-hover:text-white"></i>
+                Django Admin
+                <i class="fas fa-external-link-alt text-xs ml-auto text-slate-600"></i>
+            </a>
+            {% endif %}
+            {% endif %}
+
+        </nav>
+
+        <!-- Bottom: user info -->
+        {% if user.is_authenticated %}
+        <div class="flex-shrink-0 p-4 border-t border-slate-700/60">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    {{ user.first_name|first|default:user.username|first|upper }}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm text-white font-medium truncate leading-none">{{ user.get_full_name|default:user.username }}</p>
+                    <p class="text-xs text-slate-500 truncate mt-0.5">{{ user.get_user_role_display|default:"User" }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+
+    <!-- ============================================================
+         MAIN CONTENT WRAPPER
+    ============================================================ -->
+    <div class="ml-60 min-h-screen flex flex-col">
+
+        <!-- Top Header -->
+        <header class="sticky top-0 z-40 bg-white border-b border-slate-200 h-16 flex items-center px-6 flex-shrink-0">
+            <div class="flex items-center justify-between w-full">
+
+                <!-- Breadcrumb -->
+                <nav class="flex items-center gap-2 text-sm">
+                    {% block breadcrumb %}
+                    <a href="{% url 'dashboard:home' %}" class="text-slate-400 hover:text-slate-600">Dashboard</a>
+                    {% endblock %}
+                </nav>
+
+                <!-- Right: user dropdown -->
+                {% if user.is_authenticated %}
+                <div class="relative">
+                    <button id="userMenuBtn" onclick="toggleUserMenu(event)"
+                            class="flex items-center gap-2 text-sm text-slate-700 hover:text-slate-900 focus:outline-none">
+                        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                            {{ user.first_name|first|default:user.username|first|upper }}
+                        </div>
+                        <span class="hidden sm:block font-medium">{{ user.get_full_name|default:user.username }}</span>
+                        <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                    </button>
+
+                    <div id="userMenu"
+                         class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-50">
+                        <a href="{% url 'logout' %}"
+                           class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
+                            <i class="fas fa-sign-out-alt w-4"></i>ออกจากระบบ
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <a href="{% url 'login' %}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">เข้าสู่ระบบ</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Flash Messages -->
         {% if messages %}
-        <div class="messages mt-3">
+        <div class="px-6 pt-4 space-y-2">
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="flex items-start gap-3 px-4 py-3 rounded-lg text-sm
+                {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200
+                {% elif message.tags == 'error' or message.tags == 'danger' %}bg-red-50 text-red-800 border border-red-200
+                {% elif message.tags == 'warning' %}bg-yellow-50 text-yellow-800 border border-yellow-200
+                {% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+                <i class="fas
+                    {% if message.tags == 'success' %}fa-check-circle text-green-500
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle text-red-500
+                    {% elif message.tags == 'warning' %}fa-exclamation-triangle text-yellow-500
+                    {% else %}fa-info-circle text-blue-500{% endif %} mt-0.5 flex-shrink-0"></i>
+                <span>{{ message }}</span>
             </div>
             {% endfor %}
         </div>
         {% endif %}
-        
-        {% block content %}{% endblock %}
+
+        <!-- Page Content -->
+        <main class="flex-1 p-6">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="flex-shrink-0 px-6 py-4 border-t border-slate-200 bg-white">
+            <p class="text-xs text-slate-400 text-center">
+                Academic Information Management System &copy; {% now "Y" %} &mdash; Naresuan Phuket University
+            </p>
+        </footer>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer bg-light py-3 mt-5">
-        <div class="container text-center">
-            <span class="text-muted">Academic Information Management System &copy; {% now 'Y' %}</span>
-        </div>
-    </footer>
+    <script>
+        function toggleUserMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- jQuery (ถ้าจำเป็น) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+        document.addEventListener('click', function () {
+            const menu = document.getElementById('userMenu');
+            if (menu) menu.classList.add('hidden');
+        });
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

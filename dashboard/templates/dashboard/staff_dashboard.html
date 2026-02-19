@@ -1,143 +1,494 @@
 {% extends 'base.html' %}
 {% load humanize %}
 
-{% block title %}ข้อมูลบุคลากร - Dashboard{% endblock %}
+{% block title %}ข้อมูลบุคลากร - AIMS{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'dashboard:home' %}" class="text-slate-400 hover:text-slate-600">Dashboard</a>
+<span class="mx-2 text-slate-300">/</span>
+<span class="text-slate-700 font-medium">ข้อมูลบุคลากร</span>
+{% endblock %}
 
 {% block content %}
-    
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">Dashboard ข้อมูลบุคลากร</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="/executive/">หน้าหลัก</a></li>
-                        <li class="breadcrumb-item active">ข้อมูลบุคลากร</li>
-                    </ol>
-                </div>
+
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-xl font-bold text-slate-900">Dashboard ข้อมูลบุคลากร</h1>
+        <p class="text-sm text-slate-500 mt-1">ข้อมูลบุคลากรทั้งหมดของมหาวิทยาลัย จำแนกตามหน่วยงาน ประเภท และเพศ</p>
+    </div>
+    <a href="{% url 'dashboard:export_staff_excel' %}"
+       class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium
+              bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+        <i class="fas fa-file-excel"></i>Export Excel
+    </a>
+</div>
+
+<!-- ============================================================
+     KPI CARDS
+============================================================ -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+    <!-- บุคลากรทั้งหมด -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-users text-blue-600"></i>
+            </div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">บุคลากรทั้งหมด</p>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ total_staff|intcomma }}</p>
+        <p class="text-xs text-slate-400 mt-1">คน</p>
+    </div>
+
+    <!-- หน่วยงาน -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-building text-emerald-600"></i>
+            </div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">หน่วยงาน</p>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ total_departments }}</p>
+        <p class="text-xs text-slate-400 mt-1">หน่วยงาน</p>
+    </div>
+
+    <!-- หน่วยงานใหญ่ -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-star text-amber-500"></i>
+            </div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">หน่วยงานใหญ่</p>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ major_departments|length }}</p>
+        <p class="text-xs text-slate-400 mt-1">50 คนขึ้นไป</p>
+    </div>
+
+    <!-- หน่วยงานเล็ก -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-circle-dot text-slate-400"></i>
+            </div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">หน่วยงานเล็ก</p>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ small_departments|length }}</p>
+        <p class="text-xs text-slate-400 mt-1">ต่ำกว่า 10 คน</p>
+    </div>
+
+</div>
+
+<!-- ============================================================
+     TOP 10 DEPARTMENTS — HORIZONTAL BAR CHART
+============================================================ -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+            <div class="flex items-center gap-2">
+                <i class="fas fa-chart-bar text-blue-500"></i>
+                <h2 class="text-sm font-semibold text-slate-700">10 หน่วยงานที่มีบุคลากรมากที่สุด</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5 ml-6">จากทั้งหมด {{ total_departments }} หน่วยงาน</p>
+        </div>
+        <span class="text-xs text-slate-400">{{ total_staff|intcomma }} คน รวม</span>
+    </div>
+    <div class="p-4">
+        <div id="topDeptChart" style="height: 380px;"></div>
+    </div>
+</div>
+
+<!-- ============================================================
+     DONUT CHARTS — ประเภทบุคลากร + เพศ (2-col)
+============================================================ -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+    <!-- ประเภทบุคลากร -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+            <i class="fas fa-id-badge text-blue-500"></i>
+            <h2 class="text-sm font-semibold text-slate-700">สัดส่วนตามประเภทบุคลากร</h2>
+        </div>
+        <div class="p-4">
+            <div id="staffTypeChart" style="height: 260px;"></div>
+            <!-- Summary table -->
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-slate-50">
+                            <th class="px-3 py-2 text-left text-slate-500 font-medium">ประเภท</th>
+                            <th class="px-3 py-2 text-right text-slate-500 font-medium">จำนวน (คน)</th>
+                            <th class="px-3 py-2 text-right text-slate-500 font-medium">%</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50" id="staffTypeTable">
+                        <!-- filled by JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Summary Statistics -->
-    <div class="row">
-        <div class="col-lg-6 col-md-6">
-            <div class="small-box bg-gradient-primary">
-                <div class="inner">
-                    <h3>{{ total_staff|intcomma }}</h3>
-                    <p>บุคลากรทั้งหมด</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="small-box-footer">ข้อมูลทั้งหมด <i class="fas fa-check-circle"></i></div>
-            </div>
+    <!-- เพศ -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+            <i class="fas fa-venus-mars text-blue-500"></i>
+            <h2 class="text-sm font-semibold text-slate-700">สัดส่วนตามเพศ</h2>
         </div>
-        
-        <div class="col-lg-6 col-md-6">
-            <div class="small-box bg-gradient-success">
-                <div class="inner">
-                    <h3>{{ total_departments }}</h3>
-                    <p>หน่วยงานทั้งหมด</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-building"></i>
-                </div>
-                <div class="small-box-footer">แสดงครบถ้วน <i class="fas fa-table"></i></div>
+        <div class="p-4">
+            <div id="genderChart" style="height: 260px;"></div>
+            <!-- Summary table -->
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-slate-50">
+                            <th class="px-3 py-2 text-left text-slate-500 font-medium">เพศ</th>
+                            <th class="px-3 py-2 text-right text-slate-500 font-medium">จำนวน (คน)</th>
+                            <th class="px-3 py-2 text-right text-slate-500 font-medium">%</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50" id="genderTable">
+                        <!-- filled by JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-    
-    
-    <!-- All Departments Table -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-table me-2"></i>
-                        ข้อมูลบุคลากรตามหน่วยงาน ({{ total_departments }} หน่วยงาน)
-                    </h5>
-                    <button type="button" class="btn btn-light btn-sm" onclick="exportAllDepartments()">
-                        <i class="fas fa-download me-1"></i> Export ทั้งหมด
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th width="8%">ลำดับ</th>
-                                    <th><i class="fas fa-building me-1"></i>หน่วยงาน</th>
-                                    <th class="text-end" width="12%">จำนวน</th>
-                                    <th class="text-center" width="15%">สัดส่วน</th>
-                                    <th class="text-center" width="20%">แสดงสัดส่วน</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for dept in all_departments %}
-                                <tr>
-                                    <td class="text-center">
-                                        <span class="badge bg-primary">{{ forloop.counter }}</span>
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'dashboard:department_detail' dept.DEPARTMENTNAME %}" 
-                                           class="text-decoration-none fw-bold text-primary">
-                                            {{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}
-                                        </a>
-                                    </td>
-                                    <td class="text-end">
-                                        <span class="badge bg-success fs-6">{{ dept.count|intcomma }}</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="fw-bold text-primary">{% widthratio dept.count total_staff 100 %}%</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar bg-primary" 
-                                                 style="width: {% widthratio dept.count total_staff 100 %}%">
-                                                {% widthratio dept.count total_staff 100 %}%
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+
+</div>
+
+<!-- ============================================================
+     ALL DEPARTMENTS TABLE — แบ่งหมวดหมู่
+============================================================ -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-table text-slate-400"></i>
+            <h2 class="text-sm font-semibold text-slate-700">
+                ข้อมูลบุคลากรทุกหน่วยงาน
+                <span class="ml-1 text-slate-400 font-normal">({{ total_departments }} หน่วยงาน)</span>
+            </h2>
+        </div>
+    </div>
+
+    <!-- หน่วยงานใหญ่ (50+) -->
+    {% if major_departments %}
+    <div class="border-b border-slate-100">
+        <div class="px-6 py-3 bg-amber-50 flex items-center gap-2">
+            <i class="fas fa-star text-amber-400 text-xs"></i>
+            <span class="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+                หน่วยงานใหญ่ (50 คนขึ้นไป) — {{ major_departments|length }} หน่วยงาน
+            </span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <tbody class="divide-y divide-slate-50">
+                    {% for dept in major_departments %}
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-3 w-8 text-center">
+                            <span class="text-xs text-slate-400">{{ forloop.counter }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <a href="{% url 'dashboard:department_detail' dept.DEPARTMENTNAME %}"
+                               class="font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                {{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}
+                            </a>
+                        </td>
+                        <td class="px-4 py-3 text-right font-semibold text-slate-900 w-24">
+                            {{ dept.count|intcomma }} <span class="text-slate-400 text-xs font-normal">คน</span>
+                        </td>
+                        <td class="px-4 py-3 text-right text-amber-600 font-medium w-16">
+                            {% widthratio dept.count total_staff 100 %}%
+                        </td>
+                        <td class="px-6 py-3 w-44">
+                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="bg-amber-400 h-2 rounded-full"
+                                     style="width: {% widthratio dept.count total_staff 100 %}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- หน่วยงานกลาง (10-49) -->
+    {% if medium_departments %}
+    <div class="border-b border-slate-100">
+        <div class="px-6 py-3 bg-blue-50 flex items-center gap-2">
+            <i class="fas fa-circle text-blue-400 text-xs"></i>
+            <span class="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                หน่วยงานกลาง (10–49 คน) — {{ medium_departments|length }} หน่วยงาน
+            </span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <tbody class="divide-y divide-slate-50">
+                    {% for dept in medium_departments %}
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-2.5 w-8 text-center">
+                            <span class="text-xs text-slate-400">{{ forloop.counter }}</span>
+                        </td>
+                        <td class="px-4 py-2.5">
+                            <a href="{% url 'dashboard:department_detail' dept.DEPARTMENTNAME %}"
+                               class="text-blue-600 hover:text-blue-800 hover:underline">
+                                {{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}
+                            </a>
+                        </td>
+                        <td class="px-4 py-2.5 text-right font-medium text-slate-900 w-24">
+                            {{ dept.count|intcomma }} <span class="text-slate-400 text-xs font-normal">คน</span>
+                        </td>
+                        <td class="px-4 py-2.5 text-right text-blue-600 font-medium w-16">
+                            {% widthratio dept.count total_staff 100 %}%
+                        </td>
+                        <td class="px-6 py-2.5 w-44">
+                            <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                <div class="bg-blue-400 h-1.5 rounded-full"
+                                     style="width: {% widthratio dept.count total_staff 100 %}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- หน่วยงานเล็ก (<10) -->
+    {% if small_departments %}
+    <div>
+        <div class="px-6 py-3 bg-slate-50 flex items-center gap-2">
+            <i class="fas fa-circle text-slate-300 text-xs"></i>
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                หน่วยงานเล็ก (ต่ำกว่า 10 คน) — {{ small_departments|length }} หน่วยงาน
+            </span>
+        </div>
+        <div class="p-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                {% for dept in small_departments %}
+                <a href="{% url 'dashboard:department_detail' dept.DEPARTMENTNAME %}"
+                   class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                    <span class="text-xs text-slate-700 truncate">{{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}</span>
+                    <span class="text-xs font-semibold text-slate-500 flex-shrink-0 bg-white border border-slate-200 rounded px-1.5 py-0.5">
+                        {{ dept.count }}
+                    </span>
+                </a>
+                {% endfor %}
             </div>
         </div>
     </div>
+    {% endif %}
+
+    <!-- Total footer -->
+    <div class="px-6 py-3 bg-slate-900 flex items-center justify-between">
+        <span class="text-sm font-semibold text-white">
+            <i class="fas fa-calculator mr-2 text-slate-400"></i>รวมทั้งหมด
+        </span>
+        <span class="text-sm font-bold text-white">
+            {{ total_staff|intcomma }} <span class="text-slate-400 text-xs font-normal">คน</span>
+        </span>
+    </div>
+
+</div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Staff Dashboard (Table Only) loaded successfully');
-    
-    // Export function for all departments table
-    window.exportAllDepartments = function() {
-        const tableData = [];
-        {% for dept in all_departments %}
-        tableData.push({
-            'ลำดับ': {{ forloop.counter }},
-            'หน่วยงาน': '{{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}',
-            'จำนวน': {{ dept.count|default:0 }},
-            'สัดส่วน': '{% widthratio dept.count total_staff 100 %}%'
+
+    // ---- ข้อมูลจาก Django ----
+    const allDeptLabels  = {{ department_labels|safe }};
+    const allDeptData    = {{ department_data|safe }};
+    const staffTypeLabels = {{ staff_type_labels|safe }};
+    const staffTypeData  = {{ staff_type_data|safe }};
+    const genderLabels   = {{ gender_labels|safe }};
+    const genderData     = {{ gender_data|safe }};
+    const totalStaff     = {{ total_staff }};
+
+    // Top 10 departments
+    const top10Labels = allDeptLabels.slice(0, 10);
+    const top10Data   = allDeptData.slice(0, 10);
+
+    // ============================================================
+    // CHART 1: Top 10 Departments — Horizontal Bar
+    // ============================================================
+    if (top10Labels.length > 0) {
+        // Truncate long names for display
+        const displayLabels = top10Labels.map(l => l.length > 40 ? l.slice(0, 37) + '...' : l);
+
+        new ApexCharts(document.querySelector('#topDeptChart'), {
+            series: [{ name: 'จำนวนบุคลากร', data: top10Data }],
+            chart: {
+                type: 'bar',
+                height: 380,
+                toolbar: { show: false }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    borderRadius: 5,
+                    distributed: true,
+                    barHeight: '65%',
+                    dataLabels: { position: 'right' }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                textAnchor: 'start',
+                style: { fontSize: '12px', fontWeight: '600', colors: ['#1e293b'] },
+                formatter: (val) => val.toLocaleString() + ' คน',
+                offsetX: 8
+            },
+            xaxis: {
+                categories: displayLabels,
+                labels: {
+                    formatter: val => val.toLocaleString(),
+                    style: { fontSize: '11px', colors: '#64748b' }
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: { fontSize: '12px', fontWeight: '500', colors: '#374151' },
+                    maxWidth: 260
+                }
+            },
+            colors: [
+                '#1e40af','#1d4ed8','#2563eb','#3b82f6','#60a5fa',
+                '#93c5fd','#bfdbfe','#dbeafe','#eff6ff','#f0f9ff'
+            ],
+            legend: { show: false },
+            tooltip: {
+                y: { formatter: (val, { dataPointIndex }) => {
+                    const pct = ((val / totalStaff) * 100).toFixed(1);
+                    return `${val.toLocaleString()} คน (${pct}%)`;
+                }}
+            },
+            grid: {
+                borderColor: '#f1f5f9',
+                xaxis: { lines: { show: true } },
+                yaxis: { lines: { show: false } }
+            }
+        }).render();
+    }
+
+    // ============================================================
+    // CHART 2: Staff Type — Donut
+    // ============================================================
+    const typeColors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+    if (staffTypeLabels.length > 0) {
+        new ApexCharts(document.querySelector('#staffTypeChart'), {
+            series: staffTypeData,
+            chart: { type: 'donut', height: 260, toolbar: { show: false } },
+            labels: staffTypeLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '62%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวม',
+                                fontSize: '14px',
+                                fontWeight: '700',
+                                color: '#1e293b',
+                                formatter: w => w.globals.seriesTotals.reduce((a, b) => a + b, 0).toLocaleString()
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: (val) => Math.round(val) + '%'
+            },
+            tooltip: { y: { formatter: val => val.toLocaleString() + ' คน' } },
+            legend: { position: 'bottom', fontSize: '12px' },
+            colors: typeColors
+        }).render();
+
+        // Fill summary table
+        const typeTotal = staffTypeData.reduce((a, b) => a + b, 0);
+        const typeTable = document.getElementById('staffTypeTable');
+        staffTypeLabels.forEach((label, i) => {
+            const pct = ((staffTypeData[i] / typeTotal) * 100).toFixed(1);
+            typeTable.innerHTML += `
+                <tr class="hover:bg-slate-50/50">
+                    <td class="px-3 py-2">
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${typeColors[i % typeColors.length]}"></span>
+                            <span class="text-slate-700 font-medium">${label}</span>
+                        </span>
+                    </td>
+                    <td class="px-3 py-2 text-right font-semibold text-slate-900">${staffTypeData[i].toLocaleString()}</td>
+                    <td class="px-3 py-2 text-right font-medium text-blue-600">${pct}%</td>
+                </tr>`;
         });
-        {% endfor %}
-        
-        if (window.chartUtils && window.chartUtils.exportChart) {
-            window.chartUtils.exportChart.toCSV(tableData, 'ข้อมูลบุคลากรทุกหน่วยงาน');
-        } else {
-            console.log('📊 Export functionality not available');
-        }
-    };
+    }
+
+    // ============================================================
+    // CHART 3: Gender — Donut
+    // ============================================================
+    const genderColors = ['#2563eb', '#ec4899', '#94a3b8'];
+
+    if (genderLabels.length > 0) {
+        new ApexCharts(document.querySelector('#genderChart'), {
+            series: genderData,
+            chart: { type: 'donut', height: 260, toolbar: { show: false } },
+            labels: genderLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '62%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวม',
+                                fontSize: '14px',
+                                fontWeight: '700',
+                                color: '#1e293b',
+                                formatter: w => w.globals.seriesTotals.reduce((a, b) => a + b, 0).toLocaleString()
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: (val) => Math.round(val) + '%'
+            },
+            tooltip: { y: { formatter: val => val.toLocaleString() + ' คน' } },
+            legend: { position: 'bottom', fontSize: '12px' },
+            colors: genderColors
+        }).render();
+
+        // Fill summary table
+        const gTotal = genderData.reduce((a, b) => a + b, 0);
+        const gTable = document.getElementById('genderTable');
+        genderLabels.forEach((label, i) => {
+            const icon = label === 'ชาย' ? 'fa-mars text-blue-500' : label === 'หญิง' ? 'fa-venus text-pink-500' : 'fa-question text-slate-400';
+            const pct = ((genderData[i] / gTotal) * 100).toFixed(1);
+            gTable.innerHTML += `
+                <tr class="hover:bg-slate-50/50">
+                    <td class="px-3 py-2">
+                        <span class="inline-flex items-center gap-1.5">
+                            <i class="fas ${icon}"></i>
+                            <span class="text-slate-700 font-medium">${label}</span>
+                        </span>
+                    </td>
+                    <td class="px-3 py-2 text-right font-semibold text-slate-900">${genderData[i].toLocaleString()}</td>
+                    <td class="px-3 py-2 text-right font-medium text-blue-600">${pct}%</td>
+                </tr>`;
+        });
+    }
+
+    console.log('✅ Staff Dashboard loaded');
 });
 </script>
 {% endblock %}

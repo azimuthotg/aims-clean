@@ -3,299 +3,195 @@
 
 {% block title %}{{ user_obj.get_full_name|default:user_obj.username }} - รายละเอียดผู้ใช้{% endblock %}
 
-{% block extra_css %}
-<style>
-.user-avatar-large {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.user-info-card {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: white;
-}
-
-.stat-item {
-    text-align: center;
-    padding: 20px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 8px;
-    margin-bottom: 15px;
-}
-
-.badge-role {
-    font-size: 0.9rem;
-    padding: 8px 16px;
-}
-
-.activity-item {
-    border-left: 3px solid #2563eb;
-    padding-left: 15px;
-    margin-bottom: 15px;
-}
-</style>
+{% block breadcrumb %}
+<a href="{% url 'dashboard:home' %}" class="text-slate-400 hover:text-slate-600">Dashboard</a>
+<span class="mx-2 text-slate-300">/</span>
+<a href="{% url 'user_management' %}" class="text-slate-400 hover:text-slate-600">จัดการผู้ใช้งาน</a>
+<span class="mx-2 text-slate-300">/</span>
+<span class="text-slate-700 font-medium">{{ user_obj.get_full_name|default:user_obj.username }}</span>
 {% endblock %}
 
 {% block content %}
-<div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">
-                        <i class="fas fa-user"></i> รายละเอียดผู้ใช้
-                    </h1>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left: Profile Card -->
+    <div class="lg:col-span-1 space-y-4">
+
+        <!-- Profile -->
+        <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white text-center">
+            <div class="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-3xl font-bold mx-auto mb-4 backdrop-blur-sm">
+                {{ user_obj.first_name|first|default:user_obj.username|first|upper }}
+            </div>
+            <h2 class="text-lg font-bold mb-1">{{ user_obj.get_full_name|default:user_obj.username }}</h2>
+            <p class="text-blue-200 text-sm mb-1">{{ user_obj.email|default:"ไม่ระบุอีเมล" }}</p>
+
+            <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+                <span class="px-3 py-1 rounded-full text-xs font-medium
+                    {% if user_obj.user_role == 'super_admin' %}bg-red-500/30 text-red-100
+                    {% elif user_obj.user_role == 'staff_admin' %}bg-amber-500/30 text-amber-100
+                    {% elif user_obj.user_role == 'academic_service' %}bg-sky-500/30 text-sky-100
+                    {% else %}bg-white/20 text-white/80{% endif %}">
+                    {{ user_obj.get_role_display_thai }}
+                </span>
+                {% if user_obj.is_ldap_user %}
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white/80">LDAP</span>
+                {% endif %}
+            </div>
+
+            <div class="mt-4 flex justify-center gap-2">
+                {% if can_edit %}
+                <a href="{% url 'user_edit' user_obj.id %}"
+                   class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-white/20 hover:bg-white/30 text-white transition-colors">
+                    <i class="fas fa-edit"></i>แก้ไข
+                </a>
+                {% endif %}
+                <a href="{% url 'user_management' %}"
+                   class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-white/10 hover:bg-white/20 text-white transition-colors">
+                    <i class="fas fa-arrow-left"></i>กลับ
+                </a>
+            </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+                <i class="fas fa-info-circle text-slate-400"></i>
+                <h3 class="text-sm font-semibold text-slate-700">สถานะ</h3>
+            </div>
+            <div class="p-5 space-y-4">
+                <!-- Active status -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-slate-600">สถานะบัญชี</span>
+                    {% if user_obj.is_active %}
+                    <span class="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                        <i class="fas fa-check-circle text-emerald-500"></i>ใช้งานได้
+                    </span>
+                    {% else %}
+                    <span class="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                        <i class="fas fa-times-circle text-slate-400"></i>ปิดใช้งาน
+                    </span>
+                    {% endif %}
                 </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'user_management' %}">จัดการผู้ใช้งาน</a></li>
-                        <li class="breadcrumb-item active">{{ user_obj.get_full_name|default:user_obj.username }}</li>
-                    </ol>
+
+                <!-- Last login -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-slate-600">เข้าใช้ล่าสุด</span>
+                    <span class="text-xs text-slate-500">
+                        {% if user_obj.last_login %}{{ user_obj.last_login|naturaltime }}
+                        {% else %}ยังไม่เคยเข้าใช้{% endif %}
+                    </span>
+                </div>
+
+                <!-- Date joined -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-slate-600">สมัครเมื่อ</span>
+                    <span class="text-xs text-slate-500">{{ user_obj.date_joined|date:"d M Y" }}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main content -->
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <!-- User Profile Card -->
-                <div class="col-md-4">
-                    <div class="card user-info-card">
-                        <div class="card-body text-center">
-                            {% if user_obj.profile_image %}
-                                <img src="{{ user_obj.profile_image }}" class="user-avatar-large mb-3" alt="Profile">
-                            {% else %}
-                                <div class="user-avatar-large mx-auto mb-3 bg-white text-primary d-flex align-items-center justify-content-center" 
-                                     style="font-size: 48px; font-weight: bold;">
-                                    {{ user_obj.first_name|first|default:user_obj.username|first|upper }}
-                                </div>
-                            {% endif %}
-                            
-                            <h3 class="mb-1">{{ user_obj.get_full_name|default:user_obj.username }}</h3>
-                            <p class="mb-2">{{ user_obj.email|default:"ไม่ระบุอีเมล" }}</p>
-                            
-                            <span class="badge badge-role 
-                                {% if user_obj.user_role == 'super_admin' %}badge-danger
-                                {% elif user_obj.user_role == 'staff_admin' %}badge-warning  
-                                {% elif user_obj.user_role == 'academic_service' %}badge-info
-                                {% else %}badge-secondary{% endif %}">
-                                {{ user_obj.get_role_display_thai }}
-                            </span>
-                            
-                            {% if user_obj.is_ldap_user %}
-                                <br><span class="badge badge-light mt-2">ผู้ใช้ LDAP</span>
-                            {% endif %}
-                            
-                            <div class="mt-3">
-                                {% if can_edit %}
-                                <a href="{% url 'user_edit' user_obj.id %}" class="btn btn-warning btn-sm">
-                                    <i class="fas fa-edit"></i> แก้ไขข้อมูล
-                                </a>
-                                {% endif %}
-                                <a href="{% url 'user_management' %}" class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-arrow-left"></i> กลับ
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Right: Details -->
+    <div class="lg:col-span-2 space-y-4">
 
-                    <!-- Status Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-info-circle"></i> สถานะ
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="stat-item">
-                                <h4>
-                                    {% if user_obj.is_active %}
-                                        <i class="fas fa-check-circle text-success"></i>
-                                    {% else %}
-                                        <i class="fas fa-times-circle text-danger"></i>
-                                    {% endif %}
-                                </h4>
-                                <p class="mb-0">
-                                    {% if user_obj.is_active %}ใช้งานได้{% else %}ปิดใช้งาน{% endif %}
-                                </p>
-                            </div>
-                            
-                            <div class="stat-item">
-                                <h4>
-                                    {% if user_obj.last_login %}
-                                        <i class="fas fa-sign-in-alt text-info"></i>
-                                    {% else %}
-                                        <i class="fas fa-user-clock text-muted"></i>
-                                    {% endif %}
-                                </h4>
-                                <p class="mb-0">
-                                    {% if user_obj.last_login %}
-                                        {{ user_obj.last_login|naturaltime }}
-                                    {% else %}
-                                        ยังไม่เคยเข้าใช้
-                                    {% endif %}
-                                </p>
-                                <small>เข้าใช้ล่าสุด</small>
-                            </div>
-                            
-                            <div class="stat-item">
-                                <h4><i class="fas fa-calendar-alt text-warning"></i></h4>
-                                <p class="mb-0">{{ user_obj.date_joined|date:"d M Y" }}</p>
-                                <small>สมัครเมื่อ</small>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Basic Info -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                <i class="fas fa-id-card text-slate-400"></i>
+                <h3 class="text-sm font-semibold text-slate-700">ข้อมูลพื้นฐาน</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                {% with rows=True %}
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">ชื่อผู้ใช้</p>
+                    <p class="text-sm text-slate-900 font-medium">{{ user_obj.username }}</p>
                 </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">ชื่อ-นามสกุล</p>
+                    <p class="text-sm text-slate-900 font-medium">{{ user_obj.get_full_name|default:"ไม่ระบุ" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">อีเมล</p>
+                    <p class="text-sm text-slate-900">{{ user_obj.email|default:"ไม่ระบุ" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">เบอร์โทรศัพท์</p>
+                    <p class="text-sm text-slate-900">{{ user_obj.phone|default:"ไม่ระบุ" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">หน่วยงาน</p>
+                    <p class="text-sm text-slate-900">{{ user_obj.department|default:"ไม่ระบุ" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">แผนก</p>
+                    <p class="text-sm text-slate-900">{{ user_obj.get_division_display_thai }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">ตำแหน่ง</p>
+                    <p class="text-sm text-slate-900">{{ user_obj.position|default:"ไม่ระบุ" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">รหัสบุคลากร</p>
+                    <p class="text-sm text-slate-900">{{ user_obj.personnel_id|default:"ไม่ระบุ" }}</p>
+                </div>
+                {% endwith %}
+            </div>
+        </div>
 
-                <!-- User Details -->
-                <div class="col-md-8">
-                    <!-- Basic Information -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-id-card"></i> ข้อมูลพื้นฐาน
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <table class="table table-borderless">
-                                        <tr>
-                                            <td><strong>ชื่อผู้ใช้:</strong></td>
-                                            <td>{{ user_obj.username }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>ชื่อ-นามสกุล:</strong></td>
-                                            <td>{{ user_obj.get_full_name|default:"ไม่ระบุ" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>อีเมล:</strong></td>
-                                            <td>{{ user_obj.email|default:"ไม่ระบุ" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>เบอร์โทรศัพท์:</strong></td>
-                                            <td>{{ user_obj.phone|default:"ไม่ระบุ" }}</td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <div class="col-md-6">
-                                    <table class="table table-borderless">
-                                        <tr>
-                                            <td><strong>หน่วยงาน:</strong></td>
-                                            <td>{{ user_obj.department|default:"ไม่ระบุ" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>แผนก:</strong></td>
-                                            <td>{{ user_obj.get_division_display_thai }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>ตำแหน่ง:</strong></td>
-                                            <td>{{ user_obj.position|default:"ไม่ระบุ" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>รหัสบุคลากร:</strong></td>
-                                            <td>{{ user_obj.personnel_id|default:"ไม่ระบุ" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>ประเภทบุคลากร:</strong></td>
-                                            <td>{{ user_obj.personnel_type|default:"ไม่ระบุ" }}</td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Permissions -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-shield-alt"></i> สิทธิ์การใช้งาน
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               {% if user_obj.can_manage_users %}checked{% endif %} disabled>
-                                        <label class="form-check-label">
-                                            จัดการผู้ใช้งาน
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               {% if user_obj.can_view_all_data %}checked{% endif %} disabled>
-                                        <label class="form-check-label">
-                                            ดูข้อมูลทั้งหมด
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               {% if user_obj.is_staff %}checked{% endif %} disabled>
-                                        <label class="form-check-label">
-                                            เข้า Django Admin
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- LDAP Data (if available) -->
-                    {% if user_obj.ldap_data %}
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-server"></i> ข้อมูล LDAP
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i>
-                                ข้อมูลล่าสุดจาก LDAP API
-                            </div>
-                            <pre class="bg-light p-3 rounded">{{ user_obj.ldap_data|pprint }}</pre>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- Notes -->
-                    {% if user_obj.notes %}
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-sticky-note"></i> หมายเหตุ
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <p>{{ user_obj.notes|linebreaks }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
+        <!-- Permissions -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                <i class="fas fa-shield-alt text-slate-400"></i>
+                <h3 class="text-sm font-semibold text-slate-700">สิทธิ์การใช้งาน</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="flex items-center gap-3 p-3 rounded-lg {% if user_obj.can_manage_users %}bg-emerald-50 border border-emerald-200{% else %}bg-slate-50 border border-slate-200{% endif %}">
+                    <i class="fas {% if user_obj.can_manage_users %}fa-check-circle text-emerald-500{% else %}fa-times-circle text-slate-300{% endif %}"></i>
+                    <span class="text-sm {% if user_obj.can_manage_users %}text-emerald-700{% else %}text-slate-400{% endif %}">จัดการผู้ใช้งาน</span>
+                </div>
+                <div class="flex items-center gap-3 p-3 rounded-lg {% if user_obj.can_view_all_data %}bg-emerald-50 border border-emerald-200{% else %}bg-slate-50 border border-slate-200{% endif %}">
+                    <i class="fas {% if user_obj.can_view_all_data %}fa-check-circle text-emerald-500{% else %}fa-times-circle text-slate-300{% endif %}"></i>
+                    <span class="text-sm {% if user_obj.can_view_all_data %}text-emerald-700{% else %}text-slate-400{% endif %}">ดูข้อมูลทั้งหมด</span>
+                </div>
+                <div class="flex items-center gap-3 p-3 rounded-lg {% if user_obj.is_staff %}bg-emerald-50 border border-emerald-200{% else %}bg-slate-50 border border-slate-200{% endif %}">
+                    <i class="fas {% if user_obj.is_staff %}fa-check-circle text-emerald-500{% else %}fa-times-circle text-slate-300{% endif %}"></i>
+                    <span class="text-sm {% if user_obj.is_staff %}text-emerald-700{% else %}text-slate-400{% endif %}">เข้า Django Admin</span>
                 </div>
             </div>
         </div>
-    </section>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-// Update last activity when viewing user profile
-fetch('{% url "update_last_activity" %}', {
-    method: 'POST',
-    headers: {
-        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-        'Content-Type': 'application/json',
-    }
-});
-</script>
+        <!-- LDAP Data -->
+        {% if user_obj.ldap_data %}
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                <i class="fas fa-server text-slate-400"></i>
+                <h3 class="text-sm font-semibold text-slate-700">ข้อมูล LDAP</h3>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-700">
+                    <i class="fas fa-info-circle text-blue-500"></i>
+                    ข้อมูลล่าสุดจาก LDAP API
+                </div>
+                <pre class="bg-slate-50 rounded-lg p-4 text-xs text-slate-600 overflow-x-auto border border-slate-200">{{ user_obj.ldap_data|pprint }}</pre>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Notes -->
+        {% if user_obj.notes %}
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                <i class="fas fa-sticky-note text-slate-400"></i>
+                <h3 class="text-sm font-semibold text-slate-700">หมายเหตุ</h3>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-slate-700 leading-relaxed">{{ user_obj.notes|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
 {% endblock %}

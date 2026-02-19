@@ -1,410 +1,204 @@
 {% extends 'base.html' %}
 
-{% block title %}แก้ไขข้อมูล {{ user_obj.get_full_name|default:user_obj.username }} - AIMS{% endblock %}
+{% block title %}แก้ไข {{ user_obj.get_full_name|default:user_obj.username }} - AIMS{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'dashboard:home' %}" class="text-slate-400 hover:text-slate-600">Dashboard</a>
+<span class="mx-2 text-slate-300">/</span>
+<a href="{% url 'user_management' %}" class="text-slate-400 hover:text-slate-600">จัดการผู้ใช้งาน</a>
+<span class="mx-2 text-slate-300">/</span>
+<a href="{% url 'user_detail' user_obj.id %}" class="text-slate-400 hover:text-slate-600">{{ user_obj.get_full_name|default:user_obj.username }}</a>
+<span class="mx-2 text-slate-300">/</span>
+<span class="text-slate-700 font-medium">แก้ไข</span>
+{% endblock %}
 
 {% block content %}
-<div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">
-                        <i class="fas fa-user-edit"></i> แก้ไขข้อมูลผู้ใช้
-                    </h1>
+
+<div class="max-w-4xl mx-auto">
+
+    <!-- Page Header -->
+    <div class="mb-6">
+        <h1 class="text-xl font-bold text-slate-900">แก้ไขข้อมูลผู้ใช้</h1>
+        <p class="text-sm text-slate-500 mt-1">{{ user_obj.get_full_name|default:user_obj.username }}</p>
+    </div>
+
+    <form method="post" id="editForm">
+        {% csrf_token %}
+
+        <!-- Basic Info -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                <i class="fas fa-id-card text-blue-500"></i>
+                <h2 class="text-sm font-semibold text-slate-700">ข้อมูลพื้นฐาน</h2>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="first_name" class="block text-xs font-medium text-slate-600 mb-1.5">ชื่อ</label>
+                    <input type="text" name="first_name" id="first_name" value="{{ user_obj.first_name }}"
+                           class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
                 </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'user_management' %}">จัดการผู้ใช้งาน</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'user_detail' user_obj.id %}">{{ user_obj.get_full_name|default:user_obj.username }}</a></li>
-                        <li class="breadcrumb-item active">แก้ไข</li>
-                    </ol>
+                <div>
+                    <label for="last_name" class="block text-xs font-medium text-slate-600 mb-1.5">นามสกุล</label>
+                    <input type="text" name="last_name" id="last_name" value="{{ user_obj.last_name }}"
+                           class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                </div>
+                <div>
+                    <label for="email" class="block text-xs font-medium text-slate-600 mb-1.5">อีเมล</label>
+                    <input type="email" name="email" id="email" value="{{ user_obj.email }}"
+                           class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                </div>
+                <div>
+                    <label for="phone" class="block text-xs font-medium text-slate-600 mb-1.5">เบอร์โทรศัพท์</label>
+                    <input type="text" name="phone" id="phone" value="{{ user_obj.phone|default:'' }}"
+                           class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Main content -->
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-8 offset-md-2">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-user-edit"></i> แก้ไขข้อมูล: {{ user_obj.get_full_name|default:user_obj.username }}
-                            </h3>
-                        </div>
-                        
-                        <form method="post">
-                            {% csrf_token %}
-                            <div class="card-body">
-                                <!-- Basic Information -->
-                                <h5 class="text-primary mb-3">
-                                    <i class="fas fa-id-card"></i> ข้อมูลพื้นฐาน
-                                </h5>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="first_name">ชื่อ</label>
-                                            <input type="text" name="first_name" id="first_name" class="form-control" 
-                                                   value="{{ user_obj.first_name }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="last_name">นามสกุล</label>
-                                            <input type="text" name="last_name" id="last_name" class="form-control" 
-                                                   value="{{ user_obj.last_name }}">
-                                        </div>
-                                    </div>
-                                </div>
+        <!-- Department Info -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                <i class="fas fa-building text-blue-500"></i>
+                <h2 class="text-sm font-semibold text-slate-700">ข้อมูลหน่วยงาน</h2>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="department" class="block text-xs font-medium text-slate-600 mb-1.5">หน่วยงาน</label>
+                    <input type="text" name="department" id="department" value="{{ user_obj.department|default:'' }}"
+                           class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                </div>
+                <div>
+                    <label for="division" class="block text-xs font-medium text-slate-600 mb-1.5">แผนก</label>
+                    <select name="division" id="division"
+                            class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-colors">
+                        <option value="">-- กรุณาเลือกแผนก --</option>
+                        <option value="information_services" {% if user_obj.division == 'information_services' %}selected{% endif %}>แผนกบริการสารสนเทศฯ</option>
+                        <option value="technical" {% if user_obj.division == 'technical' %}selected{% endif %}>แผนกเทคนิคฯ</option>
+                        <option value="policy_planning" {% if user_obj.division == 'policy_planning' %}selected{% endif %}>แผนกนโยบายและแผน</option>
+                        <option value="general_admin" {% if user_obj.division == 'general_admin' %}selected{% endif %}>แผนกบริหารงานทั่วไป</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="position" class="block text-xs font-medium text-slate-600 mb-1.5">ตำแหน่ง</label>
+                    <input type="text" name="position" id="position" value="{{ user_obj.position|default:'' }}"
+                           class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                </div>
+            </div>
+        </div>
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="email">อีเมล</label>
-                                            <input type="email" name="email" id="email" class="form-control" 
-                                                   value="{{ user_obj.email }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="phone">เบอร์โทรศัพท์</label>
-                                            <input type="text" name="phone" id="phone" class="form-control" 
-                                                   value="{{ user_obj.phone|default:'' }}">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Department Information -->
-                                <h5 class="text-primary mb-3 mt-4">
-                                    <i class="fas fa-building"></i> ข้อมูลหน่วยงาน
-                                </h5>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="department">หน่วยงาน</label>
-                                            <input type="text" name="department" id="department" class="form-control" 
-                                                   value="{{ user_obj.department|default:'' }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="division">แผนก</label>
-                                            <select name="division" id="division" class="form-control">
-                                                <option value="">--กรุณาเลือกแผนก--</option>
-                                                <option value="information_services" {% if user_obj.division == 'information_services' %}selected{% endif %}>
-                                                    แผนกบริการสารสนเทศฯ
-                                                </option>
-                                                <option value="technical" {% if user_obj.division == 'technical' %}selected{% endif %}>
-                                                    แผนกเทคนิคฯ
-                                                </option>
-                                                <option value="policy_planning" {% if user_obj.division == 'policy_planning' %}selected{% endif %}>
-                                                    แผนกนโยบายและแผน
-                                                </option>
-                                                <option value="general_admin" {% if user_obj.division == 'general_admin' %}selected{% endif %}>
-                                                    แผนกบริหารงานทั่วไป
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="position">ตำแหน่ง</label>
-                                            <input type="text" name="position" id="position" class="form-control" 
-                                                   value="{{ user_obj.position|default:'' }}">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Admin Only Fields -->
-                                {% if is_super_admin %}
-                                <h5 class="text-danger mb-3 mt-4">
-                                    <i class="fas fa-shield-alt"></i> การตั้งค่าขั้นสูง (Super Admin เท่านั้น)
-                                </h5>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="user_role">บทบาทผู้ใช้</label>
-                                            <select name="user_role" id="user_role" class="form-control">
-                                                {% for role_key, role_name in user_roles %}
-                                                    <option value="{{ role_key }}" 
-                                                        {% if user_obj.user_role == role_key %}selected{% endif %}>
-                                                        {{ role_name }}
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>สถานะบัญชี</label>
-                                            <div class="custom-control custom-checkbox">
-                                                <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" 
-                                                       {% if user_obj.is_active %}checked{% endif %}>
-                                                <label class="custom-control-label" for="is_active">
-                                                    เปิดใช้งาน
-                                                </label>
-                                            </div>
-                                            <div class="custom-control custom-checkbox">
-                                                <input type="checkbox" class="custom-control-input" id="is_staff" name="is_staff" 
-                                                       {% if user_obj.is_staff %}checked{% endif %}>
-                                                <label class="custom-control-label" for="is_staff">
-                                                    เข้า Django Admin ได้
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- System Access Management -->
-                                {% if is_super_admin %}
-                                <h5 class="text-primary mb-3 mt-4">
-                                    <i class="fas fa-th-large"></i> การเข้าใช้ระบบ
-                                </h5>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h6 class="mb-0">
-                                                    <i class="fas fa-toggle-on"></i> ระบบที่เข้าได้
-                                                </h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="custom-control custom-checkbox mb-2">
-                                                    <input type="checkbox" class="custom-control-input" id="system_aims" name="system_access_aims" 
-                                                           checked disabled>
-                                                    <label class="custom-control-label" for="system_aims">
-                                                        <i class="fas fa-home text-primary"></i> AIMS Hub
-                                                        <small class="text-muted d-block">พอร์ต 8000 (บังคับ)</small>
-                                                    </label>
-                                                </div>
-                                                
-                                                <div class="custom-control custom-checkbox mb-2">
-                                                    <input type="checkbox" class="custom-control-input" id="system_dashboard" name="system_access_dashboard" 
-                                                           {% if user_obj.system_access.dashboard %}checked{% endif %}>
-                                                    <label class="custom-control-label" for="system_dashboard">
-                                                        <i class="fas fa-chart-bar text-success"></i> ระบบสถิติ
-                                                        <small class="text-muted d-block">พอร์ต 8010</small>
-                                                    </label>
-                                                </div>
-                                                
-                                                <div class="custom-control custom-checkbox mb-2">
-                                                    <input type="checkbox" class="custom-control-input" id="system_document" name="system_access_document" 
-                                                           {% if user_obj.system_access.document %}checked{% endif %}>
-                                                    <label class="custom-control-label" for="system_document">
-                                                        <i class="fas fa-file-alt text-info"></i> ระบบสารบรรณ
-                                                        <small class="text-muted d-block">พอร์ต 8011</small>
-                                                    </label>
-                                                </div>
-                                                
-                                                <div class="custom-control custom-checkbox mb-2">
-                                                    <input type="checkbox" class="custom-control-input" id="system_planning" name="system_access_planning" 
-                                                           {% if user_obj.system_access.planning %}checked{% endif %}>
-                                                    <label class="custom-control-label" for="system_planning">
-                                                        <i class="fas fa-project-diagram text-warning"></i> ระบบแผน
-                                                        <small class="text-muted d-block">พอร์ต 8012</small>
-                                                    </label>
-                                                </div>
-                                                
-                                                <div class="custom-control custom-checkbox mb-2">
-                                                    <input type="checkbox" class="custom-control-input" id="system_library" name="system_access_library" disabled>
-                                                    <label class="custom-control-label" for="system_library">
-                                                        <i class="fas fa-book text-purple"></i> ระบบห้องสมุด
-                                                        <small class="text-muted d-block">พอร์ต 8013 (ยังไม่พร้อม)</small>
-                                                    </label>
-                                                </div>
-                                                
-                                                <div class="custom-control custom-checkbox mb-2">
-                                                    <input type="checkbox" class="custom-control-input" id="system_finance" name="system_access_finance" disabled>
-                                                    <label class="custom-control-label" for="system_finance">
-                                                        <i class="fas fa-money-bill text-secondary"></i> ระบบการเงิน
-                                                        <small class="text-muted d-block">พอร์ต 8014 (ยังไม่พร้อม)</small>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h6 class="mb-0">
-                                                    <i class="fas fa-user-tag"></i> บทบาทในแต่ละระบบ
-                                                </h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="form-group mb-3">
-                                                    <label for="role_dashboard" class="text-sm">
-                                                        <i class="fas fa-chart-bar text-success"></i> ระบบสถิติ
-                                                    </label>
-                                                    <select name="system_roles_dashboard" id="role_dashboard" class="form-control form-control-sm">
-                                                        <option value="viewer" {% if user_obj.system_roles.dashboard == 'viewer' %}selected{% endif %}>
-                                                            Viewer - ดูข้อมูล
-                                                        </option>
-                                                        <option value="analyst" {% if user_obj.system_roles.dashboard == 'analyst' %}selected{% endif %}>
-                                                            Analyst - วิเคราะห์ข้อมูล
-                                                        </option>
-                                                        <option value="admin" {% if user_obj.system_roles.dashboard == 'admin' %}selected{% endif %}>
-                                                            Admin - จัดการระบบ
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                                
-                                                <div class="form-group mb-3">
-                                                    <label for="role_document" class="text-sm">
-                                                        <i class="fas fa-file-alt text-info"></i> ระบบสารบรรณ
-                                                    </label>
-                                                    <select name="system_roles_document" id="role_document" class="form-control form-control-sm">
-                                                        <option value="viewer" {% if user_obj.system_roles.document == 'viewer' %}selected{% endif %}>
-                                                            Viewer - ดูเอกสาร
-                                                        </option>
-                                                        <option value="uploader" {% if user_obj.system_roles.document == 'uploader' %}selected{% endif %}>
-                                                            Uploader - อัพโหลดเอกสาร
-                                                        </option>
-                                                        <option value="approver" {% if user_obj.system_roles.document == 'approver' %}selected{% endif %}>
-                                                            Approver - อนุมัติเอกสาร
-                                                        </option>
-                                                        <option value="admin" {% if user_obj.system_roles.document == 'admin' %}selected{% endif %}>
-                                                            Admin - จัดการระบบ
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                                
-                                                <div class="form-group mb-3">
-                                                    <label for="role_planning" class="text-sm">
-                                                        <i class="fas fa-project-diagram text-warning"></i> ระบบแผน
-                                                    </label>
-                                                    <select name="system_roles_planning" id="role_planning" class="form-control form-control-sm">
-                                                        <option value="viewer" {% if user_obj.system_roles.planning == 'viewer' %}selected{% endif %}>
-                                                            Viewer - ดูแผน
-                                                        </option>
-                                                        <option value="creator" {% if user_obj.system_roles.planning == 'creator' %}selected{% endif %}>
-                                                            Creator - สร้างแผน
-                                                        </option>
-                                                        <option value="approver" {% if user_obj.system_roles.planning == 'approver' %}selected{% endif %}>
-                                                            Approver - อนุมัติแผน
-                                                        </option>
-                                                        <option value="admin" {% if user_obj.system_roles.planning == 'admin' %}selected{% endif %}>
-                                                            Admin - จัดการระบบ
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                                
-                                                <div class="alert alert-info alert-sm">
-                                                    <small>
-                                                        <i class="fas fa-info-circle"></i> 
-                                                        บทบาทจะมีผลเฉพาะกับระบบที่ติ๊กเปิดใช้งานเท่านั้น
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Notes -->
-                                <h5 class="text-primary mb-3 mt-4">
-                                    <i class="fas fa-sticky-note"></i> หมายเหตุ
-                                </h5>
-                                
-                                <div class="form-group">
-                                    <label for="notes">หมายเหตุเพิ่มเติม</label>
-                                    <textarea name="notes" id="notes" class="form-control" rows="4" 
-                                              placeholder="หมายเหตุเกี่ยวกับผู้ใช้นี้">{{ user_obj.notes|default:'' }}</textarea>
-                                </div>
-
-                                <!-- User Info Display -->
-                                <div class="alert alert-info mt-4">
-                                    <h6><i class="fas fa-info-circle"></i> ข้อมูลเพิ่มเติม</h6>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <small>
-                                                <strong>ชื่อผู้ใช้:</strong> {{ user_obj.username }}<br>
-                                                <strong>สมัครเมื่อ:</strong> {{ user_obj.date_joined|date:"d M Y H:i" }}<br>
-                                                <strong>ประเภท:</strong> {% if user_obj.is_ldap_user %}LDAP User{% else %}Local User{% endif %}
-                                            </small>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <small>
-                                                <strong>เข้าใช้ล่าสุด:</strong> 
-                                                {% if user_obj.last_login %}
-                                                    {{ user_obj.last_login|date:"d M Y H:i" }}
-                                                {% else %}
-                                                    ยังไม่เคยเข้าใช้
-                                                {% endif %}<br>
-                                                <strong>กิจกรรมล่าสุด:</strong> {{ user_obj.last_activity|date:"d M Y H:i" }}
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="card-footer">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-save"></i> บันทึกการเปลี่ยนแปลง
-                                        </button>
-                                        <a href="{% url 'user_detail' user_obj.id %}" class="btn btn-secondary ml-2">
-                                            <i class="fas fa-times"></i> ยกเลิก
-                                        </a>
-                                    </div>
-                                    <div class="col-md-6 text-right">
-                                        {% if is_super_admin %}
-                                            <small class="text-muted">
-                                                <i class="fas fa-crown text-warning"></i>
-                                                คุณมีสิทธิ์ Super Admin สามารถแก้ไขได้ทุกอย่าง
-                                            </small>
-                                        {% else %}
-                                            <small class="text-muted">
-                                                คุณสามารถแก้ไขข้อมูลพื้นฐานเท่านั้น
-                                            </small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
+        <!-- Super Admin Settings -->
+        {% if is_super_admin %}
+        <div class="bg-white rounded-xl border border-red-200 overflow-hidden mb-4">
+            <div class="px-6 py-4 border-b border-red-100 flex items-center gap-2 bg-red-50/50">
+                <i class="fas fa-shield-alt text-red-500"></i>
+                <h2 class="text-sm font-semibold text-red-700">การตั้งค่าขั้นสูง <span class="text-xs font-normal text-red-400">(Super Admin เท่านั้น)</span></h2>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="user_role" class="block text-xs font-medium text-slate-600 mb-1.5">บทบาทผู้ใช้</label>
+                    <select name="user_role" id="user_role"
+                            class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-colors">
+                        {% for role_key, role_name in user_roles %}
+                        <option value="{{ role_key }}" {% if user_obj.user_role == role_key %}selected{% endif %}>{{ role_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1.5">สถานะบัญชี</label>
+                    <div class="space-y-2 pt-1">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_active" id="is_active"
+                                   {% if user_obj.is_active %}checked{% endif %}
+                                   class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm text-slate-700">เปิดใช้งาน</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_staff" id="is_staff"
+                                   {% if user_obj.is_staff %}checked{% endif %}
+                                   class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm text-slate-700">เข้า Django Admin ได้</span>
+                        </label>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+
+        {% endif %}
+
+        <!-- Notes -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                <i class="fas fa-sticky-note text-slate-400"></i>
+                <h2 class="text-sm font-semibold text-slate-700">หมายเหตุ</h2>
+            </div>
+            <div class="p-6">
+                <textarea name="notes" id="notes" rows="4" placeholder="หมายเหตุเกี่ยวกับผู้ใช้นี้"
+                          class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
+                                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                 resize-none transition-colors">{{ user_obj.notes|default:'' }}</textarea>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl px-5 py-4 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-blue-700">
+            <div><span class="font-medium">ชื่อผู้ใช้:</span> {{ user_obj.username }}</div>
+            <div><span class="font-medium">สมัครเมื่อ:</span> {{ user_obj.date_joined|date:"d M Y H:i" }}</div>
+            <div><span class="font-medium">ประเภท:</span> {% if user_obj.is_ldap_user %}LDAP User{% else %}Local User{% endif %}</div>
+            <div><span class="font-medium">เข้าใช้ล่าสุด:</span> {% if user_obj.last_login %}{{ user_obj.last_login|date:"d M Y H:i" }}{% else %}ยังไม่เคยเข้าใช้{% endif %}</div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+                    <i class="fas fa-save"></i>บันทึกการเปลี่ยนแปลง
+                </button>
+                <a href="{% url 'user_detail' user_obj.id %}"
+                   class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fas fa-times"></i>ยกเลิก
+                </a>
+            </div>
+            {% if is_super_admin %}
+            <p class="text-xs text-amber-600">
+                <i class="fas fa-crown text-amber-500 mr-1"></i>Super Admin — แก้ไขได้ทุกอย่าง
+            </p>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Form validation
-document.querySelector('form').addEventListener('submit', function(e) {
+document.getElementById('editForm').addEventListener('submit', function(e) {
     const firstName = document.getElementById('first_name').value.trim();
     const lastName = document.getElementById('last_name').value.trim();
     const email = document.getElementById('email').value.trim();
-    
+
     if (!firstName || !lastName) {
         alert('กรุณากรอกชื่อและนามสกุล');
         e.preventDefault();
         return false;
     }
-    
     if (email && !email.includes('@')) {
         alert('รูปแบบอีเมลไม่ถูกต้อง');
         e.preventDefault();
         return false;
     }
-    
-    // Confirm role change for super admin
+
     {% if is_super_admin %}
     const originalRole = '{{ user_obj.user_role }}';
     const newRole = document.getElementById('user_role').value;
-    
     if (originalRole !== newRole && originalRole === 'super_admin') {
         if (!confirm('คุณกำลังเปลี่ยนบทบาทจาก Super Admin เป็นบทบาทอื่น คุณแน่ใจหรือไม่?')) {
             e.preventDefault();
@@ -412,18 +206,6 @@ document.querySelector('form').addEventListener('submit', function(e) {
         }
     }
     {% endif %}
-});
-
-// Highlight changed fields
-document.querySelectorAll('input, select, textarea').forEach(function(field) {
-    const originalValue = field.value;
-    field.addEventListener('input', function() {
-        if (this.value !== originalValue) {
-            this.style.borderColor = '#28a745';
-        } else {
-            this.style.borderColor = '';
-        }
-    });
 });
 </script>
 {% endblock %}

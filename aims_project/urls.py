@@ -23,9 +23,9 @@ from django.conf.urls.static import static
 # ฟังก์ชันสำหรับ redirect เมื่อเข้า root URL
 def redirect_to_login_or_portal(request):
     if request.user.is_authenticated:
-        return redirect('portal')  # ถ้า login แล้วให้ไปที่ portal
+        return redirect('dashboard:home')
     else:
-        return redirect('login')  # ถ้ายังไม่ login ให้ไปที่หน้า login
+        return redirect('login')
 
 urlpatterns = [
     path('', redirect_to_login_or_portal, name='home'),  # เพิ่ม root URL pattern

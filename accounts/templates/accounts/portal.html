@@ -2,260 +2,172 @@
 
 {% block title %}Portal - AIMS Hub{% endblock %}
 
-{% block extra_css %}
-<style>
-.system-card {
-    transition: all 0.3s ease;
-    border: none;
-    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-}
-
-.system-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.system-icon {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
-}
-
-.role-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 0.75rem;
-}
-
-.system-card .card-body {
-    position: relative;
-    padding: 2rem 1.5rem;
-}
-
-.system-card .card-footer {
-    padding: 1rem 1.5rem;
-}
-
-.welcome-section {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: white;
-    border-radius: 15px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.user-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-@media (max-width: 768px) {
-    .system-icon {
-        font-size: 3rem;
-    }
-    
-    .system-card .card-body {
-        padding: 1.5rem 1rem;
-    }
-}
-</style>
+{% block breadcrumb %}
+<a href="{% url 'dashboard:home' %}" class="text-slate-400 hover:text-slate-600">Dashboard</a>
+<span class="mx-2 text-slate-300">/</span>
+<span class="text-slate-700 font-medium">Portal</span>
 {% endblock %}
 
 {% block content %}
-<div class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">
-                    <i class="fas fa-home"></i> AIMS Hub Portal
-                </h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item active">Portal</li>
-                </ol>
-            </div>
+
+<!-- Welcome Section -->
+<div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-6 mb-6 text-white">
+    <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold flex-shrink-0 backdrop-blur-sm">
+            {{ user.first_name|first|default:user.username|first|upper }}
+        </div>
+        <div>
+            <h1 class="text-xl font-bold leading-snug">ยินดีต้อนรับ, {{ user.get_full_name|default:user.username }}</h1>
+            <p class="text-blue-200 text-sm mt-0.5">
+                {{ user.get_role_display_thai }}
+                {% if user.department %}
+                    &mdash; {{ user.department }}
+                {% endif %}
+            </p>
+            {% if user.division %}
+            <p class="text-blue-300 text-xs mt-0.5">{{ user.get_division_display_thai }}</p>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<section class="content">
-    <div class="container-fluid">
-        <!-- Welcome Section -->
-        <div class="welcome-section">
-            <div class="user-info">
-                <div class="user-avatar">
-                    {{ user.first_name|first|default:user.username|first|upper }}
-                </div>
-                <div>
-                    <h2 class="mb-1">ยินดีต้อนรับ, {{ user.get_full_name|default:user.username }}</h2>
-                    <p class="mb-1">{{ user.get_role_display_thai }} | {{ user.department|default:"ไม่ระบุหน่วยงาน" }}</p>
-                    {% if user.division %}
-                        <small class="opacity-75">{{ user.get_division_display_thai }}</small>
+<!-- Quick Info Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-user-clock text-blue-600"></i>
+        </div>
+        <div>
+            <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">เข้าใช้ล่าสุด</p>
+            <p class="text-sm font-semibold text-slate-800 mt-0.5">
+                {% if user.last_login %}
+                    {{ user.last_login|date:"d/m/Y H:i" }}
+                {% else %}
+                    ยังไม่เคยเข้าใช้
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-shield-alt text-green-600"></i>
+        </div>
+        <div>
+            <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">ระดับสิทธิ์</p>
+            <p class="text-sm font-semibold text-slate-800 mt-0.5">{{ user.get_role_display_thai }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Systems Grid -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+        <i class="fas fa-th-large text-slate-400"></i>
+        <h2 class="text-sm font-semibold text-slate-700">ระบบที่คุณสามารถเข้าใช้งานได้</h2>
+    </div>
+
+    <div class="p-6">
+        {% if accessible_systems %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for system in accessible_systems %}
+            <div class="group relative bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 overflow-hidden">
+
+                <!-- Role badge -->
+                <span class="absolute top-3 right-3 px-2 py-0.5 rounded-full text-xs font-medium
+                    {% if system.role == 'admin' %}bg-red-100 text-red-700
+                    {% elif system.role == 'creator' or system.role == 'uploader' or system.role == 'analyst' %}bg-amber-100 text-amber-700
+                    {% elif system.role == 'approver' %}bg-sky-100 text-sky-700
+                    {% else %}bg-slate-100 text-slate-600{% endif %}">
+                    {{ system.role|upper }}
+                </span>
+
+                <div class="p-5">
+                    <!-- Icon -->
+                    <div class="w-12 h-12 rounded-xl mb-4 flex items-center justify-center
+                        {% if system.code == 'aims' %}bg-blue-100
+                        {% elif system.code == 'dashboard' %}bg-green-100
+                        {% elif system.code == 'document' %}bg-sky-100
+                        {% elif system.code == 'planning' %}bg-amber-100
+                        {% elif system.code == 'library' %}bg-purple-100
+                        {% else %}bg-slate-100{% endif %}">
+                        <i class="{{ system.icon }} text-xl
+                            {% if system.code == 'aims' %}text-blue-600
+                            {% elif system.code == 'dashboard' %}text-green-600
+                            {% elif system.code == 'document' %}text-sky-600
+                            {% elif system.code == 'planning' %}text-amber-600
+                            {% elif system.code == 'library' %}text-purple-600
+                            {% else %}text-slate-600{% endif %}">
+                        </i>
+                    </div>
+
+                    <!-- Name & Description -->
+                    <h3 class="font-semibold text-slate-900 text-sm mb-1">{{ system.name }}</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                        {% if system.code == 'aims' %}ระบบจัดการข้อมูลวิชาการและผู้ใช้งาน
+                        {% elif system.code == 'dashboard' %}ระบบสถิติและรายงานข้อมูลเชิงวิเคราะห์
+                        {% elif system.code == 'document' %}ระบบสารบรรณอิเล็กทรอนิกส์และเอกสาร
+                        {% elif system.code == 'planning' %}ระบบจัดการแผนงานและโครงการ
+                        {% elif system.code == 'library' %}ระบบจัดการห้องสมุดและทรัพยากร
+                        {% elif system.code == 'finance' %}ระบบการเงินและงบประมาณ
+                        {% else %}ระบบสำหรับการจัดการข้อมูล{% endif %}
+                    </p>
+
+                    <!-- Port info -->
+                    <p class="text-xs text-slate-400 mb-4">
+                        <i class="fas fa-server mr-1"></i>Port {{ system.port }}
+                    </p>
+
+                    <!-- CTA Button -->
+                    {% if system.code == 'aims' %}
+                    <a href="{{ system.url }}"
+                       class="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-sm font-medium
+                              bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-home"></i>เข้าใช้งาน
+                    </a>
+                    {% else %}
+                    <a href="{{ system.url }}" target="_blank"
+                       class="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-sm font-medium
+                              border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-external-link-alt"></i>เข้าใช้งาน
+                    </a>
                     {% endif %}
                 </div>
             </div>
+            {% endfor %}
         </div>
 
-        <!-- Systems Grid -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-th-large"></i> ระบบที่คุณสามารถเข้าใช้งานได้
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        {% if accessible_systems %}
-                            <div class="row">
-                                {% for system in accessible_systems %}
-                                <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-                                    <div class="card system-card h-100">
-                                        <span class="badge role-badge 
-                                            {% if system.role == 'admin' %}badge-danger
-                                            {% elif system.role == 'creator' or system.role == 'uploader' or system.role == 'analyst' %}badge-warning
-                                            {% elif system.role == 'approver' %}badge-info
-                                            {% else %}badge-secondary{% endif %}">
-                                            {{ system.role|upper }}
-                                        </span>
-                                        
-                                        <div class="card-body text-center">
-                                            <i class="{{ system.icon }} system-icon 
-                                                {% if system.code == 'aims' %}text-primary
-                                                {% elif system.code == 'dashboard' %}text-success
-                                                {% elif system.code == 'document' %}text-info
-                                                {% elif system.code == 'planning' %}text-warning
-                                                {% elif system.code == 'library' %}text-purple
-                                                {% else %}text-secondary{% endif %}">
-                                            </i>
-                                            
-                                            <h5 class="card-title">{{ system.name }}</h5>
-                                            
-                                            <p class="card-text text-muted">
-                                                {% if system.code == 'aims' %}
-                                                    ระบบจัดการข้อมูลวิชาการและผู้ใช้งาน
-                                                {% elif system.code == 'dashboard' %}
-                                                    ระบบสถิติและรายงานข้อมูลเชิงวิเคราะห์
-                                                {% elif system.code == 'document' %}
-                                                    ระบบสารบรรณอิเล็กทรอนิกส์และเอกสาร
-                                                {% elif system.code == 'planning' %}
-                                                    ระบบจัดการแผนงานและโครงการ
-                                                {% elif system.code == 'library' %}
-                                                    ระบบจัดการห้องสมุดและทรัพยากร
-                                                {% elif system.code == 'finance' %}
-                                                    ระบบการเงินและงบประมาณ
-                                                {% else %}
-                                                    ระบบสำหรับการจัดการข้อมูล
-                                                {% endif %}
-                                            </p>
-                                            
-                                            <div class="mt-3">
-                                                <small class="text-muted">
-                                                    <i class="fas fa-server"></i> Port {{ system.port }}
-                                                </small>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="card-footer bg-transparent border-top-0">
-                                            <div class="d-grid">
-                                                {% if system.code == 'aims' %}
-                                                    <a href="{{ system.url }}" class="btn btn-primary">
-                                                        <i class="fas fa-home"></i> เข้าใช้งาน
-                                                    </a>
-                                                {% else %}
-                                                    <a href="{{ system.url }}" class="btn btn-outline-primary" target="_blank">
-                                                        <i class="fas fa-external-link-alt"></i> เข้าใช้งาน
-                                                    </a>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="text-center py-5">
-                                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                                <h4>ไม่มีระบบที่สามารถเข้าใช้งานได้</h4>
-                                <p class="text-muted">กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์การเข้าใช้งาน</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
+        {% else %}
+        <!-- Empty state -->
+        <div class="flex flex-col items-center justify-center py-16">
+            <div class="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
+                <i class="fas fa-exclamation-triangle text-2xl text-amber-400"></i>
             </div>
+            <h3 class="text-slate-700 font-semibold mb-1">ไม่มีระบบที่สามารถเข้าใช้งานได้</h3>
+            <p class="text-sm text-slate-400">กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์การเข้าใช้งาน</p>
         </div>
-        
-        <!-- Quick Info -->
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="info-box">
-                    <span class="info-box-icon bg-info">
-                        <i class="fas fa-user-clock"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">เข้าใช้ล่าสุด</span>
-                        <span class="info-box-number">
-                            {% if user.last_login %}
-                                {{ user.last_login|date:"d/m/Y H:i" }}
-                            {% else %}
-                                ยังไม่เคยเข้าใช้
-                            {% endif %}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="info-box">
-                    <span class="info-box-icon bg-success">
-                        <i class="fas fa-shield-alt"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">ระดับสิทธิ์</span>
-                        <span class="info-box-number">{{ user.get_role_display_thai }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% endif %}
     </div>
-</section>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Auto-generate SSO token when user accesses portal
 document.addEventListener('DOMContentLoaded', function() {
     // Update last activity
-    fetch('{% url "update_last_activity" %}', {
-        method: 'POST',  
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            'Content-Type': 'application/json',
-        }
-    });
-    
-    // Generate SSO token for seamless access to other systems
-    generateSSOToken();
-});
+    const csrfToken = document.cookie.match(/csrftoken=([^;]+)/);
+    if (csrfToken) {
+        fetch('{% url "update_last_activity" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken[1],
+                'Content-Type': 'application/json',
+            }
+        }).catch(err => console.log('Activity update:', err));
+    }
 
-function generateSSOToken() {
-    // This will be used when user clicks on external system links
-    // Token will be set in cookie for SSO
     console.log('Portal loaded for user: {{ user.username }}');
-}
+});
 </script>
 {% endblock %}

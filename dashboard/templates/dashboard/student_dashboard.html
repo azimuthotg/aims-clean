@@ -2,501 +2,403 @@
 {% load static %}
 {% load humanize %}
 
-{% block title %}ข้อมูลนักศึกษา - Dashboard{% endblock %}
+{% block title %}ข้อมูลนักศึกษา - AIMS{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'dashboard:home' %}" class="text-slate-400 hover:text-slate-600">Dashboard</a>
+<span class="mx-2 text-slate-300">/</span>
+<span class="text-slate-700 font-medium">ข้อมูลนักศึกษา</span>
+{% endblock %}
 
 {% block content %}
-    
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">Dashboard ข้อมูลนักศึกษา</h1>
-                    <p class="text-muted">{{ year_filter_label }}</p>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="/executive/">หน้าหลัก</a></li>
-                        <li class="breadcrumb-item active">ข้อมูลนักศึกษา</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-    
 
-    <!-- Year Filter -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm border-left-primary">
-                <div class="card-body py-3">
-                    <form method="GET" class="row align-items-center">
-                        <div class="col-md-2">
-                            <label class="form-label fw-bold mb-0">
-                                <i class="fas fa-calendar-alt text-primary me-2"></i>
-                                ปีการศึกษา:
-                            </label>
-                        </div>
-                        <div class="col-md-6">
-                            <select name="year" class="form-select form-select-lg" onchange="this.form.submit()">
-                                <option value="" {% if not selected_year %}selected{% endif %}>
-                                    📊 ภาพรวมทั้งหมด ({{ total_students|intcomma }} คน)
-                                </option>
-                                {% for year_data in available_years %}
-                                <option value="{{ year_data.buddhist_year }}" 
-                                        {% if selected_year == year_data.buddhist_year %}selected{% endif %}>
-                                    📅 พ.ศ. {{ year_data.buddhist_year }} ({{ year_data.student_count|intcomma }} คน)
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4 d-flex align-items-center">
-                            {% if selected_year %}
-                            <a href="{% url 'dashboard:student' %}" class="btn btn-outline-secondary me-2">
-                                <i class="fas fa-times me-1"></i> ล้างตัวกรอง
-                            </a>
-                            {% endif %}
-                            
-                            <!-- Excel Export Button -->
-                            <a href="{% url 'dashboard:export_student_excel' %}{% if selected_year %}?year={{ selected_year }}{% endif %}" 
-                               class="btn btn-success me-2">
-                                <i class="fas fa-file-excel me-1"></i> 
-                                Export Excel{% if selected_year %} (พ.ศ. {{ selected_year }}){% endif %}
-                            </a>
-                            
-                            <span class="text-muted">
-                                <i class="fas fa-info-circle"></i>
-                                {% if selected_year %}กรองข้อมูล พ.ศ. {{ selected_year }}{% else %}แสดงข้อมูลทุกปีการศึกษา{% endif %}
-                            </span>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+<!-- Page Header + Year Filter -->
+<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+    <div>
+        <h1 class="text-xl font-bold text-slate-900">Dashboard ข้อมูลนักศึกษา</h1>
+        <p class="text-sm text-slate-500 mt-1">{{ year_filter_label }}</p>
     </div>
 
-    <!-- Summary Statistics -->
-    <div class="row">
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-gradient-primary">
-                <div class="inner">
-                    <h3>{{ total_students|intcomma }}</h3>
-                    <p>นักศึกษาทั้งหมด</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <div class="small-box-footer">ข้อมูลทั้งหมด <i class="fas fa-check-circle"></i></div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-gradient-success">
-                <div class="inner">
-                    <h3>{{ total_faculties }}</h3>
-                    <p>คณะทั้งหมด</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-university"></i>
-                </div>
-                <div class="small-box-footer">แสดงครบถ้วน <i class="fas fa-table"></i></div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-gradient-warning">
-                <div class="inner">
-                    <h3>{{ total_programs }}</h3>
-                    <p>สาขาวิชาทั้งหมด</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-book"></i>
-                </div>
-                <div class="small-box-footer">ความหลากหลาย <i class="fas fa-chart-line"></i></div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-gradient-info">
-                <div class="inner">
-                    <h3>{{ major_faculties|length }}</h3>
-                    <p>คณะใหญ่ (500+ คน)</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="small-box-footer">คณะหลัก <i class="fas fa-arrow-down"></i></div>
-            </div>
-        </div>
+    <!-- Year Filter + Export -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+        <form method="GET" class="flex items-center gap-2">
+            <label class="text-xs font-medium text-slate-600 whitespace-nowrap">
+                <i class="fas fa-calendar-alt text-blue-500 mr-1"></i>ปีการศึกษา:
+            </label>
+            <select name="year" onchange="this.form.submit()"
+                    class="text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="" {% if not selected_year %}selected{% endif %}>ภาพรวมทั้งหมด</option>
+                {% for year_data in available_years %}
+                <option value="{{ year_data.buddhist_year }}"
+                        {% if selected_year == year_data.buddhist_year %}selected{% endif %}>
+                    พ.ศ. {{ year_data.buddhist_year }} ({{ year_data.student_count|intcomma }} คน)
+                </option>
+                {% endfor %}
+            </select>
+            {% if selected_year %}
+            <a href="{% url 'dashboard:student' %}"
+               class="px-3 py-2 rounded-lg text-sm border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fas fa-times"></i>
+            </a>
+            {% endif %}
+        </form>
+
+        <a href="{% url 'dashboard:export_student_excel' %}{% if selected_year %}?year={{ selected_year }}{% endif %}"
+           class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium
+                  bg-emerald-600 text-white hover:bg-emerald-700 transition-colors whitespace-nowrap">
+            <i class="fas fa-file-excel"></i>
+            Export Excel{% if selected_year %} ({{ selected_year }}){% endif %}
+        </a>
     </div>
-    
-    <!-- All Faculties Chart (12md) -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>
-                        จำนวนนักศึกษาตามคณะทั้งหมด ({{ total_faculties }} คณะ)
-                    </h5>
-                    <button type="button" class="btn btn-light btn-sm" onclick="exportFacultyData()">
-                        <i class="fas fa-download me-1"></i> Export คณะ
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div id="facultyChart" style="height: 400px;"></div>
-                </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-user-graduate text-blue-600"></i>
             </div>
+            <p class="text-xs text-slate-500 font-medium">นักศึกษาทั้งหมด</p>
         </div>
+        <p class="text-2xl font-bold text-slate-900">{{ total_students|intcomma }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">คน</p>
     </div>
 
-    <!-- Categorized Faculty Tables -->
-    <!-- Major Faculties -->
-    {% if major_faculties %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-star me-2"></i>
-                        คณะใหญ่ (500+ คน) - {{ major_faculties|length }} คณะ
-                    </h5>
-                    <button type="button" class="btn btn-dark btn-sm" onclick="exportMajorFaculties()">
-                        <i class="fas fa-download"></i> Export
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th width="10%">อันดับ</th>
-                                    <th><i class="fas fa-university me-1"></i>คณะ</th>
-                                    <th class="text-end" width="15%">จำนวน</th>
-                                    <th class="text-center" width="20%">สัดส่วน</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for fac in major_faculties %}
-                                <tr>
-                                    <td class="text-center">
-                                        <span class="badge bg-warning text-dark">{{ forloop.counter }}</span>
-                                    </td>
-                                    <td class="faculty-name">
-                                        <a href="{% url 'dashboard:faculty_detail' fac.faculty_name %}{% if selected_year %}?year={{ selected_year }}{% endif %}" 
-                                           class="text-decoration-none fw-bold text-primary">
-                                            {{ fac.faculty_name|default:"ไม่ระบุ" }}
-                                        </a>
-                                    </td>
-                                    <td class="text-end">
-                                        <span class="badge bg-warning text-dark fs-6">{{ fac.count|intcomma }}</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="progress" style="height: 25px;">
-                                            <div class="progress-bar bg-warning" 
-                                                 style="width: {% widthratio fac.count total_students 100 %}%">
-                                                {% widthratio fac.count total_students 100 %}%
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-university text-emerald-600"></i>
             </div>
+            <p class="text-xs text-slate-500 font-medium">คณะทั้งหมด</p>
         </div>
+        <p class="text-2xl font-bold text-slate-900">{{ total_faculties }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">คณะ</p>
     </div>
-    {% endif %}
-    
-    <!-- Medium Faculties -->
-    {% if medium_faculties %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-pie me-2"></i>
-                        คณะกลาง (100-499 คน) - {{ medium_faculties|length }} คณะ
-                    </h5>
-                    <button type="button" class="btn btn-light btn-sm" onclick="exportMediumFaculties()">
-                        <i class="fas fa-download"></i> Export
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-sm">
-                            <thead class="table-info">
-                                <tr>
-                                    <th width="8%">#</th>
-                                    <th>คณะ</th>
-                                    <th class="text-end" width="12%">จำนวน</th>
-                                    <th class="text-center" width="15%">%</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for fac in medium_faculties %}
-                                <tr>
-                                    <td class="text-center">{{ forloop.counter }}</td>
-                                    <td class="faculty-name">
-                                        <a href="{% url 'dashboard:faculty_detail' fac.faculty_name %}{% if selected_year %}?year={{ selected_year }}{% endif %}" 
-                                           class="text-decoration-none text-primary">
-                                            {{ fac.faculty_name|default:"ไม่ระบุ" }}
-                                        </a>
-                                    </td>
-                                    <td class="text-end">
-                                        <span class="badge bg-info">{{ fac.count|intcomma }}</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="text-info fw-bold">{% widthratio fac.count total_students 100 %}%</span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-book text-amber-600"></i>
             </div>
+            <p class="text-xs text-slate-500 font-medium">สาขาวิชาทั้งหมด</p>
         </div>
+        <p class="text-2xl font-bold text-slate-900">{{ total_programs }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">สาขา</p>
     </div>
-    {% endif %}
-    
-    <!-- Small Faculties -->
-    {% if small_faculties %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-list me-2"></i>
-                        คณะเล็ก (<100 คน) - {{ small_faculties|length }} คณะ
-                    </h5>
-                    <button type="button" class="btn btn-light btn-sm" onclick="exportSmallFaculties()">
-                        <i class="fas fa-download"></i> Export
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        {% for fac in small_faculties %}
-                        <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
-                            <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
-                                <small class="text-truncate faculty-name">{{ fac.faculty_name|default:"ไม่ระบุ" }}</small>
-                                <span class="badge bg-secondary ms-2">{{ fac.count }}</span>
-                            </div>
-                        </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg bg-sky-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-star text-sky-600"></i>
+            </div>
+            <p class="text-xs text-slate-500 font-medium">คณะใหญ่ (500+)</p>
+        </div>
+        <p class="text-2xl font-bold text-slate-900">{{ major_faculties|length }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">คณะ</p>
+    </div>
+
+</div>
+
+<!-- Faculty Bar Chart -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-chart-bar text-slate-400"></i>
+            <h2 class="text-sm font-semibold text-slate-700">
+                จำนวนนักศึกษาตามคณะทั้งหมด
+                <span class="ml-1 text-slate-400 font-normal">({{ total_faculties }} คณะ)</span>
+            </h2>
+        </div>
+        <button onclick="exportFacultyData()"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            <i class="fas fa-download"></i>Export
+        </button>
+    </div>
+    <div class="p-4">
+        <div id="facultyChart" style="min-height: 400px;"></div>
+    </div>
+</div>
+
+<!-- Gender + Level Charts (2-col) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+    <!-- Gender Donut -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+            <i class="fas fa-chart-pie text-slate-400"></i>
+            <h2 class="text-sm font-semibold text-slate-700">สัดส่วนตามเพศ</h2>
+        </div>
+        <div class="p-4">
+            <div id="genderChart" style="height: 260px;"></div>
+
+            <!-- Gender Table -->
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-slate-50">
+                            <th class="px-3 py-2 text-left text-slate-500 font-medium w-8">#</th>
+                            <th class="px-3 py-2 text-left text-slate-500 font-medium">เพศ</th>
+                            <th class="px-3 py-2 text-right text-slate-500 font-medium">จำนวน (คน)</th>
+                            <th class="px-3 py-2 text-right text-slate-500 font-medium">%</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for gender in gender_distribution %}
+                        <tr class="hover:bg-slate-50/50">
+                            <td class="px-3 py-2 text-center text-slate-400">{{ forloop.counter }}</td>
+                            <td class="px-3 py-2 font-medium text-slate-700">
+                                {% if gender.gender == 'ชาย' %}
+                                    <i class="fas fa-mars text-blue-500 mr-1"></i>
+                                {% elif gender.gender == 'หญิง' %}
+                                    <i class="fas fa-venus text-rose-500 mr-1"></i>
+                                {% else %}
+                                    <i class="fas fa-question text-slate-400 mr-1"></i>
+                                {% endif %}
+                                {{ gender.gender|default:"ไม่ระบุ" }}
+                            </td>
+                            <td class="px-3 py-2 text-right font-semibold text-slate-900">{{ gender.count|intcomma }}</td>
+                            <td class="px-3 py-2 text-right font-medium text-blue-600">
+                                {% widthratio gender.count total_students 100 %}%
+                            </td>
+                        </tr>
                         {% endfor %}
-                    </div>
-                </div>
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-slate-50 border-t border-slate-200">
+                            <td colspan="2" class="px-3 py-2 font-semibold text-slate-700">รวม</td>
+                            <td class="px-3 py-2 text-right font-bold text-slate-900">{{ total_students|intcomma }}</td>
+                            <td class="px-3 py-2 text-right font-bold text-blue-600">100%</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="mt-3 text-center">
+                <button onclick="exportGenderData()"
+                        class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fas fa-download mr-1"></i>Export เพศ (CSV)
+                </button>
             </div>
         </div>
     </div>
-    {% endif %}
-    
-    <!-- Charts Section -->
-    <!-- Row 1: Gender and Level (col-md-6 each) -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-pie me-2"></i>
-                        สัดส่วนตามเพศ
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div id="genderChart" style="height: 300px;"></div>
-                    
-                    <!-- Gender Summary Table -->
-                    <div class="mt-4">
-                        <h6 class="text-center mb-3">
-                            <i class="fas fa-table me-2"></i>
-                            สรุปรายละเอียดตามเพศ
-                        </h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped table-hover">
-                                <thead class="table-info">
-                                    <tr>
-                                        <th width="8%" class="text-center">อันดับ</th>
-                                        <th width="50%">เพศ</th>
-                                        <th width="22%" class="text-end">จำนวน (คน)</th>
-                                        <th width="20%" class="text-center">สัดส่วน (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for gender in gender_distribution %}
-                                    <tr class="{% cycle 'table-light' '' %}">
-                                        <td class="text-center">
-                                            <span class="badge bg-info">{{ forloop.counter }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="fw-bold text-dark">
-                                                {% if gender.gender == 'ชาย' %}
-                                                    <i class="fas fa-mars me-2 text-primary"></i>{{ gender.gender|default:"ไม่ระบุ" }}
-                                                {% elif gender.gender == 'หญิง' %}
-                                                    <i class="fas fa-venus me-2 text-danger"></i>{{ gender.gender|default:"ไม่ระบุ" }}
-                                                {% else %}
-                                                    <i class="fas fa-question me-2 text-muted"></i>{{ gender.gender|default:"ไม่ระบุ" }}
-                                                {% endif %}
-                                            </span>
-                                        </td>
-                                        <td class="text-end">
-                                            <span class="fw-bold text-info">{{ gender.count|intcomma }}</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="height: 18px;">
-                                                    <div class="progress-bar 
-                                                        {% if gender.gender == 'ชาย' %}bg-primary
-                                                        {% elif gender.gender == 'หญิง' %}bg-danger
-                                                        {% else %}bg-secondary
-                                                        {% endif %}" 
-                                                         style="width: {% widthratio gender.count total_students 100 %}%">
-                                                        <small class="text-white fw-bold">
-                                                            {% widthratio gender.count total_students 100 %}%
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                                <tfoot class="table-dark">
-                                    <tr>
-                                        <td colspan="2" class="text-center fw-bold">
-                                            <i class="fas fa-calculator me-2"></i>รวมทั้งหมด
-                                        </td>
-                                        <td class="text-end fw-bold text-white">
-                                            {{ total_students|intcomma }}
-                                        </td>
-                                        <td class="text-center fw-bold text-white">100%</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                        
-                        <!-- Export Button for Gender Data -->
-                        <div class="text-center mt-3">
-                            <button type="button" class="btn btn-outline-info btn-sm" onclick="exportGenderData()">
-                                <i class="fas fa-download me-1"></i> Export ข้อมูลเพศ (CSV)
-                            </button>
-                        </div>
-                    </div>
-                </div>
+
+    <!-- Level Donut -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-chart-pie text-slate-400"></i>
+                <h2 class="text-sm font-semibold text-slate-700">ระดับการศึกษา</h2>
             </div>
+            <button onclick="goToLevelDetails()"
+                    class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fas fa-search-plus mr-1"></i>ดูรายละเอียด
+            </button>
         </div>
-        
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-donut me-2"></i>
-                        ระดับการศึกษา
-                    </h5>
-                    <button type="button" class="btn btn-light btn-sm" onclick="goToLevelDetails()">
-                        <i class="fas fa-search-plus me-1"></i> ดูรายละเอียด
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div id="levelChart" style="height: 300px;"></div>
-                    
-                    <!-- Education Level Summary Table -->
-                    <div class="mt-4">
-                        <h6 class="text-center mb-3">
-                            <i class="fas fa-table me-2"></i>
-                            สรุปรายละเอียดระดับการศึกษา
-                        </h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped table-hover">
-                                <thead class="table-danger">
-                                    <tr>
-                                        <th width="8%" class="text-center">อันดับ</th>
-                                        <th width="50%">ระดับการศึกษา</th>
-                                        <th width="22%" class="text-end">จำนวน (คน)</th>
-                                        <th width="20%" class="text-center">สัดส่วน (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for level in level_distribution %}
-                                    <tr class="{% cycle 'table-light' '' %}">
-                                        <td class="text-center">
-                                            <span class="badge bg-danger">{{ forloop.counter }}</span>
-                                        </td>
-                                        <td>
-                                            <a href="{% url 'dashboard:level_detail' level.level_name %}{% if selected_year %}?year={{ selected_year }}{% endif %}" 
-                                               class="text-decoration-none text-dark fw-bold">
-                                                {{ level.level_name|default:"ไม่ระบุ" }}
-                                                <i class="fas fa-external-link-alt ms-1 text-muted" style="font-size: 10px;"></i>
-                                            </a>
-                                        </td>
-                                        <td class="text-end">
-                                            <span class="fw-bold text-danger">{{ level.count|intcomma }}</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="height: 18px;">
-                                                    <div class="progress-bar bg-danger" 
-                                                         style="width: {% widthratio level.count total_students 100 %}%">
-                                                        <small class="text-white fw-bold">
-                                                            {% widthratio level.count total_students 100 %}%
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                                <tfoot class="table-dark">
-                                    <tr>
-                                        <td colspan="2" class="text-center fw-bold">
-                                            <i class="fas fa-calculator me-2"></i>รวมทั้งหมด
-                                        </td>
-                                        <td class="text-end fw-bold text-white">
-                                            {{ total_students|intcomma }}
-                                        </td>
-                                        <td class="text-center fw-bold text-white">100%</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                        
-                        <!-- Export Button for Level Data -->
-                        <div class="text-center mt-3">
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="exportLevelData()">
-                                <i class="fas fa-download me-1"></i> Export ข้อมูลระดับการศึกษา (CSV)
-                            </button>
-                        </div>
-                    </div>
-                </div>
+        <div class="p-4">
+            <div id="levelChart" style="height: 260px;"></div>
+
+            <!-- Level Table -->
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-slate-50">
+                            <th class="px-3 py-2 text-left text-slate-500 font-medium w-8">#</th>
+                            <th class="px-3 py-2 text-left text-slate-500 font-medium">ระดับการศึกษา</th>
+                            <th class="px-3 py-2 text-right text-slate-500 font-medium">จำนวน (คน)</th>
+                            <th class="px-3 py-2 text-right text-slate-500 font-medium">%</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for level in level_distribution %}
+                        <tr class="hover:bg-slate-50/50">
+                            <td class="px-3 py-2 text-center text-slate-400">{{ forloop.counter }}</td>
+                            <td class="px-3 py-2">
+                                <a href="{% url 'dashboard:level_detail' level.level_name %}{% if selected_year %}?year={{ selected_year }}{% endif %}"
+                                   class="font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                    {{ level.level_name|default:"ไม่ระบุ" }}
+                                </a>
+                            </td>
+                            <td class="px-3 py-2 text-right font-semibold text-slate-900">{{ level.count|intcomma }}</td>
+                            <td class="px-3 py-2 text-right font-medium text-blue-600">
+                                {% widthratio level.count total_students 100 %}%
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-slate-50 border-t border-slate-200">
+                            <td colspan="2" class="px-3 py-2 font-semibold text-slate-700">รวม</td>
+                            <td class="px-3 py-2 text-right font-bold text-slate-900">{{ total_students|intcomma }}</td>
+                            <td class="px-3 py-2 text-right font-bold text-blue-600">100%</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="mt-3 text-center">
+                <button onclick="exportLevelData()"
+                        class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fas fa-download mr-1"></i>Export ระดับการศึกษา (CSV)
+                </button>
             </div>
         </div>
     </div>
-    
-    <!-- Row 2: Year Chart (col-md-12) -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-line me-2"></i>
-                        ปีที่เข้าศึกษา
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div id="yearChart" style="height: 300px;"></div>
-                </div>
+
+</div>
+
+<!-- Faculty Categorized Tables -->
+{% if major_faculties %}
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-star text-amber-400"></i>
+            <h2 class="text-sm font-semibold text-slate-700">
+                คณะใหญ่ (500+ คน)
+                <span class="ml-1 text-slate-400 font-normal">{{ major_faculties|length }} คณะ</span>
+            </h2>
+        </div>
+        <button onclick="exportMajorFaculties()"
+                class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            <i class="fas fa-download mr-1"></i>Export
+        </button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-12">อันดับ</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">คณะ</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide w-28">จำนวน</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-48">สัดส่วน</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for fac in major_faculties %}
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-4 py-3 text-center">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+                            {{ forloop.counter }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <a href="{% url 'dashboard:faculty_detail' fac.faculty_name %}{% if selected_year %}?year={{ selected_year }}{% endif %}"
+                           class="font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ fac.faculty_name|default:"ไม่ระบุ" }}
+                        </a>
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold text-slate-900">
+                        {{ fac.count|intcomma }} <span class="text-slate-400 text-xs font-normal">คน</span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 bg-slate-100 rounded-full h-2">
+                                <div class="bg-amber-400 h-2 rounded-full"
+                                     style="width: {% widthratio fac.count total_students 100 %}%"></div>
+                            </div>
+                            <span class="text-xs text-slate-500 w-10 text-right">{% widthratio fac.count total_students 100 %}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if medium_faculties %}
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-chart-pie text-sky-400"></i>
+            <h2 class="text-sm font-semibold text-slate-700">
+                คณะกลาง (100–499 คน)
+                <span class="ml-1 text-slate-400 font-normal">{{ medium_faculties|length }} คณะ</span>
+            </h2>
+        </div>
+        <button onclick="exportMediumFaculties()"
+                class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            <i class="fas fa-download mr-1"></i>Export
+        </button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-12">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">คณะ</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide w-24">จำนวน</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide w-16">%</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for fac in medium_faculties %}
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-4 py-3 text-center text-slate-400 text-xs">{{ forloop.counter }}</td>
+                    <td class="px-4 py-3">
+                        <a href="{% url 'dashboard:faculty_detail' fac.faculty_name %}{% if selected_year %}?year={{ selected_year }}{% endif %}"
+                           class="text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ fac.faculty_name|default:"ไม่ระบุ" }}
+                        </a>
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold text-slate-900">{{ fac.count|intcomma }}</td>
+                    <td class="px-4 py-3 text-right font-medium text-sky-600">
+                        {% widthratio fac.count total_students 100 %}%
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if small_faculties %}
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-list text-slate-400"></i>
+            <h2 class="text-sm font-semibold text-slate-700">
+                คณะเล็ก (&lt;100 คน)
+                <span class="ml-1 text-slate-400 font-normal">{{ small_faculties|length }} คณะ</span>
+            </h2>
+        </div>
+        <button onclick="exportSmallFaculties()"
+                class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            <i class="fas fa-download mr-1"></i>Export
+        </button>
+    </div>
+    <div class="p-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {% for fac in small_faculties %}
+            <div class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 rounded-lg">
+                <span class="text-xs text-slate-700 truncate">{{ fac.faculty_name|default:"ไม่ระบุ" }}</span>
+                <span class="text-xs font-semibold text-slate-500 flex-shrink-0 bg-white border border-slate-200 rounded px-1.5 py-0.5">
+                    {{ fac.count }}
+                </span>
             </div>
+            {% endfor %}
         </div>
     </div>
+</div>
+{% endif %}
+
+<!-- Year Trend Line Chart -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+        <i class="fas fa-chart-line text-slate-400"></i>
+        <h2 class="text-sm font-semibold text-slate-700">แนวโน้มจำนวนนักศึกษาตามปีการศึกษา</h2>
+    </div>
+    <div class="p-4">
+        <div id="yearChart" style="height: 300px;"></div>
+    </div>
+</div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ข้อมูลสำหรับกราฟ
     const facultyLabels = {{ faculty_labels|safe }};
     const facultyData = {{ faculty_data|safe }};
     const genderLabels = {{ gender_labels|safe }};
@@ -505,339 +407,187 @@ document.addEventListener('DOMContentLoaded', function() {
     const levelData = {{ level_data|safe }};
     const yearLabels = {{ year_labels|safe }};
     const yearData = {{ year_data|safe }};
-    
-    // กราฟแท่งแนวนอน - นักศึกษาตามคณะ (แสดงทั้งหมด + Dynamic Height)
+
+    // ---- Faculty Bar Chart (Horizontal) ----
     if (facultyLabels.length > 0) {
-        // Show enhanced loading skeleton
-        window.enhancedLoader?.showChartSkeleton('facultyChart', 'bar');
-        
-        setTimeout(() => {
-            try {
-                // คำนวณความสูงแบบ Dynamic ตามจำนวนคณะ
-                const baseHeight = 300;
-                const heightPerItem = 35;
-                const minHeight = 400;
-                const maxHeight = 800;
-                const dynamicHeight = Math.min(maxHeight, Math.max(minHeight, facultyLabels.length * heightPerItem + baseHeight));
-                
-                console.log(`📊 Faculty Chart: ${facultyLabels.length} faculties, height: ${dynamicHeight}px`);
-        
-                const facultyOptions = {
-                    series: [{
-                        name: 'จำนวนนักศึกษา',
-                        data: facultyData
-                    }],
-                    chart: {
-                        type: 'bar',
-                        height: dynamicHeight,
-                        toolbar: { show: false }
-                    },
-                    plotOptions: {
-                        bar: {
-                            borderRadius: 6,
-                            horizontal: true,
-                            distributed: true,
-                            barHeight: facultyLabels.length <= 8 ? '70%' : facultyLabels.length <= 14 ? '80%' : '90%'
-                        }
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        style: {
-                            colors: ['#fff'],
-                            fontSize: facultyLabels.length <= 8 ? '13px' : facultyLabels.length <= 14 ? '12px' : '11px',
-                            fontWeight: 'bold'
-                        },
-                        formatter: function(val) {
-                            return val.toLocaleString() + ' คน';
-                        }
-                    },
-                    xaxis: {
-                        categories: facultyLabels,
-                        title: {
-                            text: 'จำนวนนักศึกษา (คน)',
-                            style: { fontSize: '14px', fontWeight: '600' }
-                        },
-                        labels: {
-                            style: { fontSize: facultyLabels.length <= 8 ? '12px' : '11px' },
-                            formatter: function(val) { return val.toLocaleString(); }
-                        }
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'คณะ',
-                            style: { fontSize: '14px', fontWeight: '600' }
-                        },
-                        labels: {
-                            style: {
-                                fontSize: facultyLabels.length <= 8 ? '14px' : facultyLabels.length <= 14 ? '13px' : '12px',
-                                fontWeight: '500'
-                            },
-                            formatter: function(val) {
-                                let maxLength = facultyLabels.length <= 8 ? 45 : facultyLabels.length <= 14 ? 40 : 35;
-                                if (val.length > maxLength) {
-                                    return val.substring(0, maxLength - 3) + '...';
-                                }
-                                return val;
-                            }
-                        }
-                    },
-                    grid: {
-                        show: true,
-                        borderColor: '#e0e6ed',
-                        strokeDashArray: 5,
-                        xaxis: { lines: { show: true } }
-                    },
-                    tooltip: {
-                        y: { formatter: function(val) { return val.toLocaleString() + ' คน'; } }
-                    },
-                    title: {
-                        text: 'การกระจายนักศึกษาตามคณะ',
-                        align: 'center',
-                        style: { fontSize: '16px', fontWeight: 'bold', color: '#059669' }
-                    },
-                    colors: ['#059669']
-                };
-                
-                // Clear skeleton and prepare for chart
-                window.enhancedLoader?.prepareForChart('facultyChart');
-                
-                const facultyChart = new ApexCharts(document.querySelector("#facultyChart"), facultyOptions);
-                facultyChart.render().then(() => {
-                    window.enhancedLoader?.showSuccess('facultyChart', 'โหลดข้อมูลคณะสำเร็จ');
-                    if (window.registerChart) window.registerChart('facultyChart', facultyChart);
-                    if (window.addChartExportButtons) window.addChartExportButtons('facultyChart', 'นักศึกษาตามคณะ');
-                }).catch((error) => {
-                    console.error('Faculty Chart Error:', error);
-                    window.enhancedLoader?.showEnhancedError('facultyChart', 'data', 'ไม่สามารถโหลดข้อมูลคณะได้');
-                });
-                
-            } catch (error) {
-                console.error('Faculty Chart Setup Error:', error);
-                window.enhancedLoader?.showEnhancedError('facultyChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟ');
-            }
-        }, 800);
-    } else {
-        window.enhancedLoader?.showEnhancedError('facultyChart', 'data', 'ไม่พบข้อมูลคณะ');
+        const baseHeight = 300;
+        const heightPerItem = 35;
+        const dynamicHeight = Math.min(800, Math.max(400, facultyLabels.length * heightPerItem + baseHeight));
+        document.querySelector('#facultyChart').style.height = dynamicHeight + 'px';
+
+        const facultyChart = new ApexCharts(document.querySelector('#facultyChart'), {
+            series: [{ name: 'จำนวนนักศึกษา', data: facultyData }],
+            chart: { type: 'bar', height: dynamicHeight, toolbar: { show: false } },
+            plotOptions: {
+                bar: {
+                    borderRadius: 5,
+                    horizontal: true,
+                    distributed: false,
+                    barHeight: facultyLabels.length <= 8 ? '60%' : '75%'
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                style: { colors: ['#fff'], fontSize: '11px', fontWeight: 'bold' },
+                formatter: val => val.toLocaleString() + ' คน'
+            },
+            xaxis: {
+                categories: facultyLabels,
+                title: { text: 'จำนวนนักศึกษา (คน)', style: { fontSize: '13px', fontWeight: '600' } },
+                labels: { formatter: val => val.toLocaleString() }
+            },
+            yaxis: {
+                labels: {
+                    style: { fontSize: '12px' },
+                    formatter: val => val.length > 40 ? val.substring(0, 37) + '...' : val
+                }
+            },
+            grid: { borderColor: '#e2e8f0', strokeDashArray: 5, xaxis: { lines: { show: true } } },
+            tooltip: { y: { formatter: val => val.toLocaleString() + ' คน' } },
+            colors: ['#2563eb']
+        });
+        facultyChart.render();
     }
-    
-    // กราฟโดนัท - สัดส่วนนักศึกษาตามเพศ
+
+    // ---- Gender Donut Chart ----
     if (genderLabels.length > 0) {
-        window.enhancedLoader?.showChartSkeleton('genderChart', 'pie');
-        
-        setTimeout(() => {
-            try {
-                const genderOptions = {
-                    series: genderData,
-                    chart: {
-                        type: 'donut',
-                        height: 250,
-                        toolbar: { show: false }
-                    },
-                    labels: genderLabels,
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                size: '60%',
-                                labels: {
-                                    show: true,
-                                    total: {
-                                        show: true,
-                                        label: 'รวม',
-                                        formatter: function (w) {
-                                            const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                                            return total.toLocaleString();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        formatter: function (val, opts) {
-                            const value = opts.w.config.series[opts.seriesIndex];
-                            return value.toLocaleString();
-                        }
-                    },
-                    tooltip: {
-                        y: { formatter: function(val) { return val.toLocaleString() + ' คน'; } }
-                    },
-                    legend: { position: 'bottom', fontSize: '12px' },
-                    colors: ['#2563eb', '#dc2626', '#d97706']
-                };
-                
-                window.enhancedLoader?.prepareForChart('genderChart');
-                
-                const genderChart = new ApexCharts(document.querySelector("#genderChart"), genderOptions);
-                genderChart.render().then(() => {
-                    window.enhancedLoader?.showSuccess('genderChart', 'โหลดข้อมูลเพศสำเร็จ');
-                    if (window.registerChart) window.registerChart('genderChart', genderChart);
-                    if (window.addChartExportButtons) window.addChartExportButtons('genderChart', 'สัดส่วนตามเพศ');
-                }).catch((error) => {
-                    console.error('Gender Chart Error:', error);
-                    window.enhancedLoader?.showEnhancedError('genderChart', 'data', 'ไม่สามารถโหลดข้อมูลเพศได้');
-                });
-                
-            } catch (error) {
-                console.error('Gender Chart Setup Error:', error);
-                window.enhancedLoader?.showEnhancedError('genderChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟเพศ');
-            }
-        }, 600);
-    } else {
-        window.enhancedLoader?.showEnhancedError('genderChart', 'data', 'ไม่พบข้อมูลเพศ');
-    }
-    
-    // กราฟโดนัท - ระดับการศึกษา
-    if (levelLabels.length > 0) {
-        window.enhancedLoader?.showChartSkeleton('levelChart', 'pie');
-        
-        setTimeout(() => {
-            try {
-                const levelOptions = {
-                    series: levelData,
-                    chart: {
-                        type: 'donut',
-                        height: 250,
-                        toolbar: { show: false }
-                    },
-                    labels: levelLabels,
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                size: '60%',
-                                labels: {
-                                    show: true,
-                                    total: {
-                                        show: true,
-                                        label: 'รวม',
-                                        formatter: function (w) {
-                                            const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                                            return total.toLocaleString();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        formatter: function (val) { return Math.round(val) + '%'; }
-                    },
-                    tooltip: {
-                        y: { formatter: function(val) { return val.toLocaleString() + ' คน'; } }
-                    },
-                    legend: { position: 'bottom', fontSize: '12px' },
-                    colors: ['#dc2626', '#0891b2', '#d97706', '#059669']
-                };
-                
-                window.enhancedLoader?.prepareForChart('levelChart');
-                
-                const levelChart = new ApexCharts(document.querySelector("#levelChart"), levelOptions);
-                levelChart.render().then(() => {
-                    window.enhancedLoader?.showSuccess('levelChart', 'โหลดข้อมูลระดับการศึกษาสำเร็จ');
-                    if (window.registerChart) window.registerChart('levelChart', levelChart);
-                    if (window.addChartExportButtons) window.addChartExportButtons('levelChart', 'ระดับการศึกษา');
-                }).catch((error) => {
-                    console.error('Level Chart Error:', error);
-                    window.enhancedLoader?.showEnhancedError('levelChart', 'data', 'ไม่สามารถโหลดข้อมูลระดับการศึกษาได้');
-                });
-                
-            } catch (error) {
-                console.error('Level Chart Setup Error:', error);
-                window.enhancedLoader?.showEnhancedError('levelChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟระดับการศึกษา');
-            }
-        }, 400);
-    } else {
-        window.enhancedLoader?.showEnhancedError('levelChart', 'data', 'ไม่พบข้อมูลระดับการศึกษา');
-    }
-    
-    // กราฟเส้น - แนวโน้มนักศึกษาตามปีการศึกษา
-    if (yearLabels.length > 0) {
-        window.enhancedLoader?.showChartSkeleton('yearChart', 'line');
-        
-        setTimeout(() => {
-            try {
-                const yearOptions = {
-                    series: [{
-                        name: 'จำนวนนักศึกษา',
-                        data: yearData
-                    }],
-                    chart: {
-                        type: 'line',
-                        height: 300,
-                        toolbar: { show: false },
-                        zoom: { enabled: false }
-                    },
-                    stroke: { curve: 'stepline', width: 3 },
-                    markers: { size: 6, hover: { size: 8 } },
-                    xaxis: {
-                        categories: yearLabels,
-                        title: {
-                            text: 'ปีการศึกษา',
-                            style: { fontSize: '14px', fontWeight: '600' }
-                        }
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'จำนวนนักศึกษา (คน)',
-                            style: { fontSize: '14px', fontWeight: '600' }
-                        },
+        const genderChart = new ApexCharts(document.querySelector('#genderChart'), {
+            series: genderData,
+            chart: { type: 'donut', height: 260, toolbar: { show: false } },
+            labels: genderLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
                         labels: {
-                            formatter: function(val) { return val.toLocaleString(); }
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวม',
+                                formatter: w => w.globals.seriesTotals.reduce((a, b) => a + b, 0).toLocaleString()
+                            }
                         }
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        formatter: function(val) { return val.toLocaleString(); },
-                        style: {
-                            fontSize: '11px',
-                            fontWeight: 'bold',
-                            colors: ['#ffffff']
-                        },
-                        background: {
-                            enabled: true,
-                            foreColor: '#2563eb',
-                            borderRadius: 4,
-                            padding: 4
-                        }
-                    },
-                    grid: {
-                        show: true,
-                        borderColor: '#e0e6ed',
-                        strokeDashArray: 5
-                    },
-                    tooltip: {
-                        y: { formatter: function(val) { return val.toLocaleString() + ' คน'; } }
-                    },
-                    title: {
-                        text: 'แนวโน้มจำนวนนักศึกษาตามปีการศึกษา',
-                        align: 'center',
-                        style: { fontSize: '16px', fontWeight: 'bold', color: '#2563eb' }
-                    },
-                    colors: ['#2563eb']
-                };
-                
-                window.enhancedLoader?.prepareForChart('yearChart');
-                
-                const yearChart = new ApexCharts(document.querySelector("#yearChart"), yearOptions);
-                yearChart.render().then(() => {
-                    window.enhancedLoader?.showSuccess('yearChart', 'โหลดข้อมูลปีการศึกษาสำเร็จ');
-                    if (window.registerChart) window.registerChart('yearChart', yearChart);
-                    if (window.addChartExportButtons) window.addChartExportButtons('yearChart', 'แนวโน้มตามปี');
-                }).catch((error) => {
-                    console.error('Year Chart Error:', error);
-                    window.enhancedLoader?.showEnhancedError('yearChart', 'data', 'ไม่สามารถโหลดข้อมูลปีการศึกษาได้');
-                });
-                
-            } catch (error) {
-                console.error('Year Chart Setup Error:', error);
-                window.enhancedLoader?.showEnhancedError('yearChart', 'server', 'เกิดข้อผิดพลาดในการตั้งค่ากราฟปี');
-            }
-        }, 200);
-    } else {
-        window.enhancedLoader?.showEnhancedError('yearChart', 'data', 'ไม่พบข้อมูลปีการศึกษา');
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: (val, opts) => opts.w.config.series[opts.seriesIndex].toLocaleString()
+            },
+            tooltip: { y: { formatter: val => val.toLocaleString() + ' คน' } },
+            legend: { position: 'bottom', fontSize: '12px' },
+            colors: ['#2563eb', '#dc2626', '#d97706']
+        });
+        genderChart.render();
     }
-    
+
+    // ---- Level Donut Chart ----
+    if (levelLabels.length > 0) {
+        const levelChart = new ApexCharts(document.querySelector('#levelChart'), {
+            series: levelData,
+            chart: { type: 'donut', height: 260, toolbar: { show: false } },
+            labels: levelLabels,
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'รวม',
+                                formatter: w => w.globals.seriesTotals.reduce((a, b) => a + b, 0).toLocaleString()
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: val => Math.round(val) + '%'
+            },
+            tooltip: { y: { formatter: val => val.toLocaleString() + ' คน' } },
+            legend: { position: 'bottom', fontSize: '12px' },
+            colors: ['#dc2626', '#0891b2', '#d97706', '#059669', '#7c3aed']
+        });
+        levelChart.render();
+    }
+
+    // ---- Year Line Chart ----
+    if (yearLabels.length > 0) {
+        const yearChart = new ApexCharts(document.querySelector('#yearChart'), {
+            series: [{ name: 'จำนวนนักศึกษา', data: yearData }],
+            chart: { type: 'line', height: 300, toolbar: { show: false }, zoom: { enabled: false } },
+            stroke: { curve: 'stepline', width: 3 },
+            markers: { size: 6, hover: { size: 8 } },
+            xaxis: {
+                categories: yearLabels,
+                title: { text: 'ปีการศึกษา', style: { fontSize: '13px', fontWeight: '600' } }
+            },
+            yaxis: {
+                title: { text: 'จำนวนนักศึกษา (คน)', style: { fontSize: '13px', fontWeight: '600' } },
+                labels: { formatter: val => val.toLocaleString() }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: val => val.toLocaleString(),
+                style: { fontSize: '11px', fontWeight: 'bold', colors: ['#fff'] },
+                background: { enabled: true, foreColor: '#2563eb', borderRadius: 4, padding: 4 }
+            },
+            grid: { borderColor: '#e2e8f0', strokeDashArray: 5 },
+            tooltip: { y: { formatter: val => val.toLocaleString() + ' คน' } },
+            colors: ['#2563eb']
+        });
+        yearChart.render();
+    }
+
+    // ---- Export helpers ----
+    function csvExport(data, filename) {
+        if (!data.length) return;
+        const headers = Object.keys(data[0]);
+        const rows = [headers.join(','), ...data.map(r => headers.map(h => JSON.stringify(r[h] ?? '')).join(','))];
+        const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: filename });
+        a.click(); URL.revokeObjectURL(a.href);
+    }
+
+    window.exportFacultyData = () => {
+        const data = [];
+        {% for fac in major_faculties %}data.push({ 'คณะ': '{{ fac.faculty_name|default:"ไม่ระบุ" }}', 'ประเภท': 'คณะใหญ่', 'จำนวน': {{ fac.count }} });{% endfor %}
+        {% for fac in medium_faculties %}data.push({ 'คณะ': '{{ fac.faculty_name|default:"ไม่ระบุ" }}', 'ประเภท': 'คณะกลาง', 'จำนวน': {{ fac.count }} });{% endfor %}
+        {% for fac in small_faculties %}data.push({ 'คณะ': '{{ fac.faculty_name|default:"ไม่ระบุ" }}', 'ประเภท': 'คณะเล็ก', 'จำนวน': {{ fac.count }} });{% endfor %}
+        csvExport(data, 'ข้อมูลนักศึกษาตามคณะ.csv');
+    };
+
+    window.exportGenderData = () => {
+        const data = [{% for gender in gender_distribution %}{ 'เพศ': '{{ gender.gender|default:"ไม่ระบุ" }}', 'จำนวน': {{ gender.count }} },{% endfor %}];
+        csvExport(data, 'ข้อมูลนักศึกษาตามเพศ.csv');
+    };
+
+    window.exportLevelData = () => {
+        const data = [{% for level in level_distribution %}{ 'ระดับการศึกษา': '{{ level.level_name|default:"ไม่ระบุ" }}', 'จำนวน': {{ level.count }} },{% endfor %}];
+        csvExport(data, 'ข้อมูลนักศึกษาตามระดับการศึกษา.csv');
+    };
+
+    window.exportMajorFaculties = () => {
+        const data = [{% for fac in major_faculties %}{ 'คณะ': '{{ fac.faculty_name|default:"ไม่ระบุ" }}', 'จำนวน': {{ fac.count }} },{% endfor %}];
+        csvExport(data, 'คณะใหญ่.csv');
+    };
+
+    window.exportMediumFaculties = () => {
+        const data = [{% for fac in medium_faculties %}{ 'คณะ': '{{ fac.faculty_name|default:"ไม่ระบุ" }}', 'จำนวน': {{ fac.count }} },{% endfor %}];
+        csvExport(data, 'คณะกลาง.csv');
+    };
+
+    window.exportSmallFaculties = () => {
+        const data = [{% for fac in small_faculties %}{ 'คณะ': '{{ fac.faculty_name|default:"ไม่ระบุ" }}', 'จำนวน': {{ fac.count }} },{% endfor %}];
+        csvExport(data, 'คณะเล็ก.csv');
+    };
+
+    window.goToLevelDetails = () => {
+        console.log('Level detail navigation');
+    };
+
     console.log('✅ Student Dashboard loaded successfully');
 });
 </script>
