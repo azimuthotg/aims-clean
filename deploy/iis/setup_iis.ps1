@@ -20,6 +20,10 @@ Write-Host ""
 # ------------------------------------------------------------
 # 1. ตรวจสอบ path สำคัญ
 # ------------------------------------------------------------
+# ตั้ง DJANGO_SETTINGS_MODULE ให้ชัดเจน (ป้องกัน inherit จาก project_tracker)
+$env:DJANGO_SETTINGS_MODULE = "aims_project.settings"
+Write-Host "   DJANGO_SETTINGS_MODULE = $env:DJANGO_SETTINGS_MODULE" -ForegroundColor DarkGray
+
 Write-Host "[1/6] ตรวจสอบ paths..." -ForegroundColor Yellow
 
 if (-not (Test-Path "$ProjectPath\manage.py")) {
