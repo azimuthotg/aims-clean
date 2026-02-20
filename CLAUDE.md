@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AIMS (Academic Information Management System) is a Django web application for academic staff and student data management at NPU (Naresuan Phuket University). The system features dual-dashboard architecture with LDAP authentication and advanced analytics capabilities.
+AIMS (Academic Information Management System) is a Django web application for academic staff and student data management at NPU (Nakhon Phanom University). The system features dual-dashboard architecture with LDAP authentication and advanced analytics capabilities.
 
 ## System Architecture
 
