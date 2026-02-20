@@ -1,263 +1,371 @@
-# AIMS Dashboard - Deployment Guide
+# คู่มือการติดตั้งระบบ AIMS
+## สำนักวิทยบริการ มหาวิทยาลัยนครพนม
 
-## สำหรับ Windows Server + Waitress + NSSM
-
----
-
-## 1. ข้อกำหนดเบื้องต้น (Prerequisites)
-
-### ซอฟต์แวร์ที่ต้องติดตั้ง:
-- **Python 3.12+** - https://www.python.org/downloads/
-- **Git** - https://git-scm.com/download/win
-- **NSSM** - https://nssm.cc/download
-
-### ติดตั้ง NSSM:
-1. ดาวน์โหลด NSSM จาก https://nssm.cc/download
-2. แตกไฟล์และ copy `nssm.exe` ไปที่ `C:\nssm\nssm.exe`
-3. หรือเพิ่ม path ของ NSSM ใน System PATH
+**เวอร์ชัน:** 2.0
+**วันที่:** กุมภาพันธ์ 2569
+**ผู้จัดทำ:** งานเทคนิคสารสนเทศและการจัดการทรัพยากร
 
 ---
 
-## 2. Clone โปรเจค
+## สารบัญ
 
-```cmd
-cd C:\projects
+1. [ภาพรวมระบบ](#1-ภาพรวมระบบ)
+2. [สิ่งที่ต้องเตรียม](#2-สิ่งที่ต้องเตรียม)
+3. [สถาปัตยกรรมระบบ](#3-สถาปัตยกรรมระบบ)
+4. [ขั้นตอนการติดตั้ง](#4-ขั้นตอนการติดตั้ง)
+5. [การตั้งค่า Environment](#5-การตั้งค่า-environment)
+6. [การติดตั้ง Windows Service](#6-การติดตั้ง-windows-service)
+7. [การตั้งค่า IIS](#7-การตั้งค่า-iis)
+8. [การทดสอบระบบ](#8-การทดสอบระบบ)
+9. [การบำรุงรักษา](#9-การบำรุงรักษา)
+10. [การแก้ปัญหาที่พบบ่อย](#10-การแก้ปัญหาที่พบบ่อย)
+
+---
+
+## 1. ภาพรวมระบบ
+
+ระบบ AIMS (Academic Information Management System) เป็นเว็บแอปพลิเคชันพัฒนาด้วย **Django 5.0** สำหรับบริหารจัดการข้อมูลบุคลากรและนักศึกษา
+
+**URL ที่ใช้งาน:**
+```
+https://lib.npu.ac.th/aims/
+```
+
+**ข้อมูลเซิร์ฟเวอร์:**
+
+| รายการ | ค่า |
+|--------|-----|
+| IP Address | 110.78.83.102 |
+| Domain | lib.npu.ac.th |
+| OS | Windows Server 2019 |
+| Path โปรเจ็กต์ | C:\project\aims_project |
+| Port ภายใน | 8001 (Waitress) |
+
+---
+
+## 2. สิ่งที่ต้องเตรียม
+
+### 2.1 ซอฟต์แวร์
+| รายการ | เวอร์ชัน | หมายเหตุ |
+|--------|----------|---------|
+| Windows Server | 2019 | ติดตั้งแล้ว |
+| Python | 3.12+ | ต้องติดตั้งก่อน |
+| Git | ล่าสุด | สำหรับ clone/pull โค้ด |
+| IIS | 10.0 | ติดตั้งแล้ว (จาก project_tracker) |
+| ARR Module | 3.0 | ติดตั้งแล้ว (จาก project_tracker) |
+| URL Rewrite Module | 2.1 | ติดตั้งแล้ว (จาก project_tracker) |
+| NSSM | 2.24 | มีอยู่ที่ C:\nssm\nssm.exe แล้ว |
+
+> **หมายเหตุ:** IIS, ARR, URL Rewrite, NSSM ติดตั้งแล้วทั้งหมดจากการ deploy project_tracker
+> ไม่ต้องติดตั้งซ้ำ — ข้ามไปขั้นตอนที่ 4 ได้เลย
+
+### 2.2 ไฟล์ที่ต้องเตรียม
+| ไฟล์ | ที่เก็บ | หมายเหตุ |
+|------|---------|---------|
+| .env | C:\project\aims_project\ | copy จาก deploy\.env.production แล้วแก้ค่า |
+| credentials JSON | C:\project\aims_project\credentials\ | Google Sheets API |
+
+---
+
+## 3. สถาปัตยกรรมระบบ
+
+### 3.1 ภาพรวม Path-based Routing
+
+ระบบรันบน Server เดียวกับ project_tracker โดยใช้ **Path-based Routing** แยก path กัน:
+
+```
+ผู้ใช้งาน (Browser)
+        │
+        │  https://lib.npu.ac.th/aims/
+        ▼
+┌─────────────────────────────────────┐
+│  IIS 10.0 (Windows Server 2019)     │
+│  Port 443 → รับ HTTPS Request       │
+│                                     │
+│  SSL: cert2026.pfx (*.npu.ac.th)   │
+│  /aims/static/* → staticfiles/     │  ← IIS serve โดยตรง
+│  /aims/*        → :8001            │  ← Reverse Proxy
+│  /projects/*    → :8000            │  ← project_tracker (เดิม)
+└──────────────────┬──────────────────┘
+                   │ http://127.0.0.1:8001/
+                   ▼
+┌─────────────────────────────────────┐
+│  Waitress (Python WSGI Server)      │
+│  Listen: 127.0.0.1:8001            │
+│  Service: AIMS (NSSM)              │
+└──────────────────┬──────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────┐
+│  Django Application                 │
+│  Settings: aims_project.settings   │
+│  FORCE_SCRIPT_NAME: /aims          │
+└─────────────────────────────────────┘
+```
+
+### 3.2 การทำงานของ Path-based Routing
+
+1. Browser ส่ง Request: `https://lib.npu.ac.th/aims/dashboard/staff/`
+2. IIS รับ Request และ **ตัด prefix `/aims`** ออก
+3. IIS ส่งต่อให้ Waitress: `http://127.0.0.1:8001/dashboard/staff/`
+4. Django ประมวลผลและสร้าง URL กลับโดยใส่ `/aims` นำหน้าทุก Link (ผ่าน `FORCE_SCRIPT_NAME`)
+5. ผู้ใช้เห็น URL ที่ถูกต้อง: `https://lib.npu.ac.th/aims/dashboard/staff/`
+
+---
+
+## 4. ขั้นตอนการติดตั้ง
+
+### 4.1 Clone โค้ดจาก GitHub
+
+เปิด **PowerShell (Administrator)** แล้วรัน:
+
+```powershell
+cd C:\project
 git clone https://github.com/azimuthotg/aims-clean.git aims_project
-cd aims_project
+cd C:\project\aims_project
+```
+
+### 4.2 สร้าง Virtual Environment และติดตั้ง Dependencies
+
+```powershell
+python -m venv venv
+.\venv\Scripts\pip.exe install -r requirements.txt
+.\venv\Scripts\pip.exe install waitress
+```
+
+### 4.3 ตรวจสอบระบบ
+
+```powershell
+.\venv\Scripts\python.exe manage.py check
 ```
 
 ---
 
-## 3. สร้าง Virtual Environment
+## 5. การตั้งค่า Environment
 
-```cmd
-python -m venv aims_env
-aims_env\Scripts\activate
-pip install --upgrade pip
-pip install -r requirements.txt
-pip install waitress
+### 5.1 สร้างไฟล์ .env
+
+```powershell
+copy C:\project\aims_project\deploy\.env.production C:\project\aims_project\.env
+notepad C:\project\aims_project\.env
 ```
 
----
-
-## 4. ตั้งค่า Environment Variables
-
-### สร้างไฟล์ `.env`:
-
-```cmd
-copy .env.example .env
-notepad .env
-```
-
-### แก้ไขค่าใน `.env`:
+แก้ไขค่าที่ต้องเปลี่ยน:
 
 ```env
-# Django Settings
-SECRET_KEY=your-secure-secret-key-here
-DEBUG=False
-ALLOWED_HOSTS=localhost,127.0.0.1,your-server-ip,your-domain.com
-
-# Database Configuration
-DB_ENGINE=django.db.backends.mysql
-DB_NAME=aims
-DB_USER=your-db-username
-DB_PASSWORD=your-db-password
-DB_HOST=202.29.55.213
-DB_PORT=3306
-
-# External API Database
-API_DB_HOST=202.29.55.213
-API_DB_PORT=3306
-API_DB_USER=your-api-db-username
-API_DB_PASSWORD=your-api-db-password
-API_DB_NAME=api
-
-# LDAP Authentication
-LDAP_API_URL=https://api.npu.ac.th/v2/ldap/auth_and_get_personnel/
-LDAP_API_TOKEN=your-ldap-token
-
-# Waitress Server
-WAITRESS_HOST=0.0.0.0
-WAITRESS_PORT=8005
-WAITRESS_THREADS=4
+SECRET_KEY=ใส่-random-key-ที่นี่
+ALLOWED_HOSTS=localhost,110.78.83.102,lib.npu.ac.th
+FORCE_SCRIPT_NAME=/aims
+STATIC_URL=/aims/static/
+CSRF_TRUSTED_ORIGINS=https://lib.npu.ac.th
+DB_USER=ใส่-db-username
+DB_PASSWORD=ใส่-db-password
+API_DB_USER=ใส่-api-db-username
+API_DB_PASSWORD=ใส่-api-db-password
+LDAP_API_TOKEN=ใส่-JWT-token
+WAITRESS_PORT=8001
 ```
 
----
-
-## 5. ทดสอบการทำงาน
-
-### ทดสอบ Django:
-```cmd
-python manage.py check
-python manage.py migrate
-```
-
-### ทดสอบ Waitress:
-```cmd
-python waitress_server.py
-```
-
-เปิด browser ไปที่ http://localhost:8005/ ตรวจสอบว่าทำงานได้
-
-กด `Ctrl+C` เพื่อหยุด
-
----
-
-## 6. ติดตั้ง Windows Service
-
-### แก้ไข paths ใน `deploy/install_service.bat`:
-
-```bat
-set PROJECT_DIR=C:\inetpub\wwwroot\aims
-set PYTHON_PATH=C:\inetpub\wwwroot\aims\aims_env\Scripts\python.exe
-set SCRIPT_PATH=C:\inetpub\wwwroot\aims\waitress_server.py
-set NSSM_PATH=C:\nssm\nssm.exe
-```
-
-### รัน install script (ต้องรันด้วย Administrator):
-
-```cmd
-cd C:\inetpub\wwwroot\aims\deploy
-install_service.bat
-```
-
----
-
-## 7. จัดการ Service
-
-### คำสั่ง NSSM:
-
-| คำสั่ง | การใช้งาน |
-|--------|-----------|
-| `nssm start AIMS-Dashboard` | เริ่ม service |
-| `nssm stop AIMS-Dashboard` | หยุด service |
-| `nssm restart AIMS-Dashboard` | รีสตาร์ท service |
-| `nssm status AIMS-Dashboard` | ดูสถานะ |
-| `nssm edit AIMS-Dashboard` | แก้ไขการตั้งค่า |
-| `nssm remove AIMS-Dashboard` | ลบ service |
-
-### หรือใช้ script:
-
-```cmd
-deploy\manage_service.bat
-```
-
----
-
-## 8. ตรวจสอบ Log Files
-
-Log files อยู่ที่:
-- `C:\inetpub\wwwroot\aims\logs\aims_stdout.log`
-- `C:\inetpub\wwwroot\aims\logs\aims_stderr.log`
-
-### ดู log แบบ real-time:
+### 5.2 Generate SECRET_KEY
 
 ```powershell
-Get-Content "C:\inetpub\wwwroot\aims\logs\aims_stdout.log" -Wait -Tail 50
+.\venv\Scripts\python.exe -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
----
+นำค่าที่ได้ไปใส่ใน `SECRET_KEY=` ในไฟล์ `.env`
 
-## 9. อัพเดทโค้ด
-
-```cmd
-cd C:\inetpub\wwwroot\aims
-
-REM หยุด service
-nssm stop AIMS-Dashboard
-
-REM Pull โค้ดใหม่
-git pull origin main
-
-REM เปิด virtual environment
-aims_env\Scripts\activate
-
-REM ติดตั้ง dependencies ใหม่ (ถ้ามี)
-pip install -r requirements.txt
-
-REM รัน migrations (ถ้ามี)
-python manage.py migrate
-
-REM เริ่ม service
-nssm start AIMS-Dashboard
-```
-
----
-
-## 10. Firewall Configuration
-
-เปิด port 8005 ใน Windows Firewall:
+### 5.3 Collect Static Files
 
 ```powershell
-# รันด้วย Administrator
-New-NetFirewallRule -DisplayName "AIMS Dashboard" -Direction Inbound -Port 8005 -Protocol TCP -Action Allow
+cd C:\project\aims_project
+.\venv\Scripts\python.exe manage.py collectstatic --noinput
+```
+
+### 5.4 Run Database Migrations
+
+```powershell
+.\venv\Scripts\python.exe manage.py migrate
 ```
 
 ---
 
-## 11. IIS Reverse Proxy (Optional)
+## 6. การติดตั้ง Windows Service (NSSM + Waitress)
 
-ถ้าต้องการใช้ IIS เป็น reverse proxy:
+```powershell
+cd C:\project\aims_project
 
-### ติดตั้ง URL Rewrite และ ARR:
-1. ดาวน์โหลด URL Rewrite: https://www.iis.net/downloads/microsoft/url-rewrite
-2. ดาวน์โหลด ARR: https://www.iis.net/downloads/microsoft/application-request-routing
+# แปลง Encoding ก่อน (สำคัญ!)
+$path = ".\deploy\iis\setup_iis.ps1"
+$content = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+$utf8Bom = New-Object System.Text.UTF8Encoding $true
+[System.IO.File]::WriteAllText($path, $content, $utf8Bom)
 
-### ตั้งค่า web.config (ในโฟลเดอร์ IIS site):
+# รัน Setup Script
+.\deploy\iis\setup_iis.ps1
+```
+
+Script จะดำเนินการ:
+- ✅ Collect static files
+- ✅ Run migrations
+- ✅ สร้าง NSSM Service ชื่อ **AIMS**
+- ✅ เพิ่ม IIS Server Variables
+- ✅ สร้าง Virtual Directory `/aims/static/`
+- ✅ Start service
+
+### ตรวจสอบสถานะ Service
+
+```powershell
+C:\nssm\nssm.exe status AIMS
+# ต้องแสดง: SERVICE_RUNNING
+```
+
+---
+
+## 7. การตั้งค่า IIS
+
+### 7.1 เพิ่ม Rules ใน web.config
+
+> **สำคัญ:** ไม่ต้องสร้าง web.config ใหม่ — ต้องเพิ่ม rules เข้าไปในไฟล์ที่มีอยู่ที่ `C:\iis_root\web.config`
+> (ไฟล์นี้คุม project_tracker อยู่ด้วย อย่า overwrite!)
+
+เปิด `C:\iis_root\web.config` แล้วเพิ่ม rules ของ AIMS เข้าไปใน `<rules>` block:
 
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <system.webServer>
-        <rewrite>
-            <rules>
-                <rule name="AIMS Reverse Proxy" stopProcessing="true">
-                    <match url="(.*)" />
-                    <action type="Rewrite" url="http://localhost:8005/{R:1}" />
-                </rule>
-            </rules>
-        </rewrite>
-    </system.webServer>
-</configuration>
+<!-- AIMS: Static files — ให้ IIS serve โดยตรง ไม่ผ่าน Waitress -->
+<rule name="AIMS Static Files" stopProcessing="true">
+    <match url="^aims/static/(.*)" />
+    <conditions>
+        <add input="{REQUEST_FILENAME}" matchType="IsFile" />
+    </conditions>
+    <action type="None" />
+</rule>
+
+<!-- AIMS: App — Reverse Proxy ไป Waitress port 8001 -->
+<rule name="AIMS App" stopProcessing="true">
+    <match url="^aims/(.*)" />
+    <action type="Rewrite" url="http://127.0.0.1:8001/{R:1}" />
+    <serverVariables>
+        <set name="HTTP_X_FORWARDED_PROTO" value="https" />
+        <set name="HTTP_X_FORWARDED_HOST" value="{HTTP_HOST}" />
+    </serverVariables>
+</rule>
+```
+
+> ดูตัวอย่าง rules ฉบับเต็มได้ที่ `deploy/iis/web.config`
+
+### 7.2 Virtual Directory (ถ้า Script ทำไม่สำเร็จ)
+
+สร้างผ่าน IIS Manager:
+```
+Site: Default Web Site
+Add Virtual Directory:
+  Alias:         aims/static
+  Physical path: C:\project\aims_project\staticfiles
 ```
 
 ---
 
-## 12. Troubleshooting
+## 8. การทดสอบระบบ
 
-### Service ไม่ start:
-1. ตรวจสอบ log files
-2. ตรวจสอบ path ใน NSSM: `nssm edit AIMS-Dashboard`
-3. ทดสอบรัน manual: `python waitress_server.py`
+### 8.1 ทดสอบ Waitress (ภายใน)
 
-### Database connection error:
-1. ตรวจสอบค่าใน `.env`
-2. ตรวจสอบ firewall ระหว่าง server กับ database
+```powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:8001/" -UseBasicParsing
+# ต้องได้รับ Response (302 redirect ถือว่าปกติ)
+```
 
-### Permission denied:
-1. รัน Command Prompt ด้วย Administrator
-2. ตรวจสอบ permission ของโฟลเดอร์ logs
+### 8.2 ทดสอบผ่าน Browser
 
-### Port already in use:
-```cmd
-netstat -ano | findstr :8005
-taskkill /PID <PID> /F
+| URL | ผลที่คาดหวัง |
+|-----|-------------|
+| `https://lib.npu.ac.th/aims/` | แสดงหน้า Login |
+| `https://lib.npu.ac.th/aims/accounts/login/` | แสดงหน้า Login LDAP |
+| `https://lib.npu.ac.th/aims/dashboard/staff/` | หน้า Staff Dashboard (ต้อง login ก่อน) |
+
+---
+
+## 9. การบำรุงรักษา
+
+### 9.1 คำสั่ง Service ที่ใช้บ่อย
+
+```powershell
+# ดูสถานะ
+C:\nssm\nssm.exe status AIMS
+
+# Restart (หลัง git pull หรือแก้ไข .env)
+C:\nssm\nssm.exe restart AIMS
+
+# Stop / Start
+C:\nssm\nssm.exe stop AIMS
+C:\nssm\nssm.exe start AIMS
+```
+
+### 9.2 อัปเดตโค้ด
+
+```powershell
+cd C:\project\aims_project
+git pull origin main
+.\venv\Scripts\python.exe manage.py migrate
+.\venv\Scripts\python.exe manage.py collectstatic --noinput
+C:\nssm\nssm.exe restart AIMS
+```
+
+### 9.3 ดู Log
+
+```powershell
+# Log ทั่วไป
+Get-Content "C:\project\aims_project\logs\waitress.log" -Tail 50
+
+# Log Error
+Get-Content "C:\project\aims_project\logs\waitress_error.log" -Tail 50
+
+# Real-time
+Get-Content "C:\project\aims_project\logs\waitress_error.log" -Wait
 ```
 
 ---
 
-## 13. Security Checklist
+## 10. การแก้ปัญหาที่พบบ่อย
 
-- [ ] ตั้ง `DEBUG=False` ใน production
-- [ ] ใช้ `SECRET_KEY` ที่ซับซ้อน
-- [ ] ตั้งค่า `ALLOWED_HOSTS` ให้ถูกต้อง
-- [ ] ใช้ HTTPS (ผ่าน IIS หรือ reverse proxy)
-- [ ] ตั้งค่า firewall ให้เปิดเฉพาะ port ที่จำเป็น
-- [ ] ไม่ commit ไฟล์ `.env` ขึ้น git
-- [ ] ตั้งค่า database user ให้มี permission เฉพาะที่จำเป็น
+| อาการ | สาเหตุ | วิธีแก้ |
+|-------|--------|---------|
+| **502 Bad Gateway** | AIMS service ไม่ได้รัน | `C:\nssm\nssm.exe start AIMS` |
+| **400 Bad Request** | `lib.npu.ac.th` ไม่อยู่ใน ALLOWED_HOSTS | แก้ไข `.env` แล้ว restart |
+| **404 ทุกหน้า** | `FORCE_SCRIPT_NAME` ไม่ถูกต้อง | ตรวจสอบ `FORCE_SCRIPT_NAME=/aims` ใน `.env` |
+| **Static files หาย** | ยังไม่ได้รัน collectstatic หรือ Virtual Directory ผิด | รัน collectstatic + ตรวจ IIS Virtual Directory |
+| **CSRF Error** | `CSRF_TRUSTED_ORIGINS` ไม่มี domain | เพิ่ม `CSRF_TRUSTED_ORIGINS=https://lib.npu.ac.th` ใน `.env` |
+| **500.50 URL Rewrite Error** | Server Variable ไม่ได้ unlock | รัน setup_iis.ps1 ใหม่ หรือเพิ่ม allowedServerVariables manual |
+| **Login loop** | `SESSION_COOKIE_SECURE=True` แต่ไม่มี HTTPS | ตรวจสอบว่า IIS ส่ง `X-Forwarded-Proto: https` |
+| **Script encoding error** | PowerShell อ่าน UTF-8 ผิด | แปลง Encoding ด้วย UTF8 BOM ก่อนรัน script |
 
 ---
 
-## Contact
+## ภาคผนวก — โครงสร้างไฟล์สำคัญ
 
-หากพบปัญหา กรุณาติดต่อทีมพัฒนา
+```
+C:\project\aims_project\
+├── .env                          ← Environment variables (ไม่ commit)
+├── deploy\
+│   ├── .env.production          ← Template .env สำหรับ production
+│   ├── waitress_serve.py        ← Entry point สำหรับ Waitress / NSSM
+│   ├── DEPLOY.md                ← คู่มือนี้
+│   └── iis\
+│       ├── web.config           ← AIMS IIS rules (นำไปเพิ่มใน C:\iis_root\web.config)
+│       └── setup_iis.ps1        ← IIS + NSSM Setup script
+├── logs\
+│   ├── waitress.log             ← Application log
+│   └── waitress_error.log       ← Error log
+├── staticfiles\                 ← Static files (หลัง collectstatic)
+└── credentials\
+    └── *.json                   ← Google Sheets API credentials
+
+C:\iis_root\
+└── web.config                   ← IIS website root (shared กับ project_tracker)
+
+C:\nssm\
+└── nssm.exe                     ← Service Manager (shared)
+```
+
+---
+
+*เอกสารนี้จัดทำโดยงานเทคนิคสารสนเทศและการจัดการทรัพยากร สำนักวิทยบริการ มหาวิทยาลัยนครพนม*

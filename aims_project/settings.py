@@ -37,6 +37,29 @@ DEBUG = os.getenv('DEBUG', 'True').lower() in ['true', '1', 'yes', 'on']
 # Convert comma-separated ALLOWED_HOSTS to list
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',') if os.getenv('ALLOWED_HOSTS', '*') != '*' else ['*']
 
+# =============================================================
+# Reverse Proxy / Path-based Routing
+# ใช้เมื่อ deploy ผ่าน IIS + ARR (Path-based Routing)
+# Dev: FORCE_SCRIPT_NAME=''  (ไม่ต้องตั้ง)
+# Prod: FORCE_SCRIPT_NAME=/aims
+# =============================================================
+FORCE_SCRIPT_NAME = os.getenv('FORCE_SCRIPT_NAME', '')
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Secure Cookies — เปิดอัตโนมัติเมื่อ DEBUG=False (production)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+# CSRF Trusted Origins — เพิ่ม domain จริงใน .env
+# Dev: http://localhost:8001
+# Prod: https://lib.npu.ac.th
+CSRF_TRUSTED_ORIGINS = [
+    o.strip()
+    for o in os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:8001').split(',')
+    if o.strip()
+]
+
 
 # Application definition
 
@@ -140,7 +163,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = '/static/'
+# Dev: /static/   Prod: /aims/static/  (ตั้งผ่าน .env)
+STATIC_URL = os.getenv('STATIC_URL', '/static/')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
