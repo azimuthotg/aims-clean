@@ -42,14 +42,14 @@ class LDAPBackend:
                 personnel_info = data.get('personnel_info', {})
                 # ข้อมูลเพิ่มเติม
                 additional_info = data.get('additional_info', {})
-                
+
                 # รวมข้อมูลทั้งหมด
                 personnel_data = {**personnel_info, **additional_info}
-                
-                # ตรวจสอบว่าเป็นเจ้าหน้าที่สำนักวิทยบริการหรือไม่
-                is_academic_service = self._check_is_academic_service(personnel_data)
-                
-                # สร้างหรืออัปเดตข้อมูลผู้ใช้
+
+                # ตรวจสอบว่า LDAP ระบุว่าอยู่สำนักวิทยบริการหรือไม่
+                is_from_academic_service = self._check_is_academic_service(personnel_data)
+
+                # สร้างหรืออัปเดตข้อมูลผู้ใช้เสมอ (แม้ไม่ใช่สำนักวิทยบริการ)
                 user, created = User.objects.update_or_create(
                     username=username,
                     defaults={
@@ -59,20 +59,26 @@ class LDAPBackend:
                         'department': personnel_info.get('departmentname', ''),
                         'position': additional_info.get('position', ''),
                         'personnel_type': personnel_info.get('sfftypenameT', ''),
-                        'is_academic_service': is_academic_service,
+                        'is_academic_service': is_from_academic_service,
                         'ldap_data': data,
                     }
                 )
-                
+
                 # ถ้าเป็นการสร้างผู้ใช้ใหม่ ตั้งค่า password ที่ไม่สามารถใช้ login ผ่าน Django ได้
                 if created:
                     user.set_unusable_password()
                     user.save()
-                
-                # ถ้าเป็นเจ้าหน้าที่สำนักวิทยบริการ จึงอนุญาตให้เข้าใช้งานระบบ
-                if is_academic_service:
+
+                # อนุญาตให้เข้าใช้งานถ้า: LDAP ระบุว่าเป็นสำนักวิทยบริการ หรือ Admin อนุมัติแล้ว
+                if is_from_academic_service or user.is_approved:
                     return user
-            
+                else:
+                    # LDAP ผ่านแต่ยังไม่ได้รับอนุมัติ → บันทึก flag รอการอนุมัติ
+                    if request and hasattr(request, 'session'):
+                        request.session['login_pending'] = True
+                        request.session['pending_name'] = user.get_full_name() or username
+                    return None
+
             return None
                 
         except requests.exceptions.RequestException as e:

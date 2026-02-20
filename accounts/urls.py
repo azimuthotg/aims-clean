@@ -12,6 +12,8 @@ urlpatterns = [
     path('users/add/', views.add_user, name='add_user'),
     path('users/<int:user_id>/', views.user_detail, name='user_detail'),
     path('users/<int:user_id>/edit/', views.user_edit, name='user_edit'),
+    path('users/<int:user_id>/approve/', views.approve_user, name='approve_user'),
+    path('users/<int:user_id>/reject/', views.reject_user, name='reject_user'),
     path('update-activity/', views.update_last_activity, name='update_last_activity'),
     
     # SSO API Endpoints

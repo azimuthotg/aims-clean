@@ -34,7 +34,12 @@ def login_view(request):
             messages.success(request, 'เข้าสู่ระบบสำเร็จ')
             return redirect('dashboard:home')
         else:
-            messages.error(request, 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง หรือคุณไม่มีสิทธิ์ในการเข้าใช้งานระบบนี้')
+            # ตรวจสอบว่าเป็นกรณีรอการอนุมัติหรือรหัสผ่านผิด
+            if request.session.pop('login_pending', False):
+                pending_name = request.session.pop('pending_name', '')
+                messages.warning(request, 'บัญชีของคุณยังไม่ได้รับการอนุมัติจากผู้ดูแลระบบ กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์')
+            else:
+                messages.error(request, 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง หรือคุณไม่มีสิทธิ์ในการเข้าใช้งานระบบนี้')
     
     return render(request, 'accounts/login.html')
 
@@ -128,14 +133,23 @@ def user_management(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Pending users: LDAP authenticated but not approved (ช่วยราชการ / สังกัดอื่น)
+    pending_users = User.objects.filter(
+        is_ldap_user=True,
+        is_academic_service=False,
+        is_approved=False,
+        is_active=True,
+    ).order_by('-date_joined')
+
     # Statistics
     stats = {
         'total_users': User.objects.count(),
         'active_users': User.objects.filter(is_active=True).count(),
         'ldap_users': User.objects.filter(is_ldap_user=True).count(),
         'super_admins': User.objects.filter(user_role='super_admin').count(),
+        'pending_users': pending_users.count(),
     }
-    
+
     context = {
         'page_obj': page_obj,
         'search_query': search_query,
@@ -143,6 +157,7 @@ def user_management(request):
         'status_filter': status_filter,
         'user_roles': User.USER_ROLES,
         'stats': stats,
+        'pending_users': pending_users,
     }
     
     return render(request, 'accounts/user_management.html', context)
@@ -265,6 +280,32 @@ def add_user(request):
     }
     
     return render(request, 'accounts/add_user.html', context)
+
+@login_required
+@user_passes_test(can_manage_users, login_url='/dashboard/')
+def approve_user(request, user_id):
+    """อนุมัติผู้ใช้ที่รอการอนุมัติ (ช่วยราชการ)"""
+    if request.method == 'POST':
+        user_obj = get_object_or_404(User, id=user_id)
+        user_obj.is_approved = True
+        user_obj.approved_at = timezone.now()
+        user_obj.approved_by = request.user.username
+        user_obj.save()
+        messages.success(request, f'อนุมัติผู้ใช้ "{user_obj.get_full_name() or user_obj.username}" เรียบร้อยแล้ว')
+    return redirect('user_management')
+
+
+@login_required
+@user_passes_test(can_manage_users, login_url='/dashboard/')
+def reject_user(request, user_id):
+    """ปฏิเสธผู้ใช้ (ปิดการใช้งาน)"""
+    if request.method == 'POST':
+        user_obj = get_object_or_404(User, id=user_id)
+        user_obj.is_active = False
+        user_obj.save()
+        messages.info(request, f'ปฏิเสธสิทธิ์ผู้ใช้ "{user_obj.get_full_name() or user_obj.username}" เรียบร้อยแล้ว')
+    return redirect('user_management')
+
 
 @login_required
 def update_last_activity(request):

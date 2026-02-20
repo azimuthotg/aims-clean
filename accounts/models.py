@@ -54,6 +54,11 @@ class User(AbstractUser):
     last_activity = models.DateTimeField(default=timezone.now, verbose_name="กิจกรรมล่าสุด")
     is_ldap_user = models.BooleanField(default=True, verbose_name="ผู้ใช้ LDAP")
     notes = models.TextField(blank=True, null=True, verbose_name="หมายเหตุ")
+
+    # Approval fields (for secondment staff / ช่วยราชการ)
+    is_approved = models.BooleanField(default=False, verbose_name="อนุมัติโดย Admin")
+    approved_at = models.DateTimeField(null=True, blank=True, verbose_name="วันที่อนุมัติ")
+    approved_by = models.CharField(max_length=100, blank=True, null=True, verbose_name="อนุมัติโดย")
     
     # Multi-System Support Fields
     system_access = models.JSONField(
