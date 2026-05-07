@@ -138,10 +138,18 @@ def run_sync_students(triggered_by='manual', triggered_user=None, existing_log=N
 class Command(BaseCommand):
     help = 'Sync students_info from Oracle source database'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--triggered-by',
+            default='manual',
+            help='Who triggered this sync (manual, schedule, etc.)',
+        )
+
     def handle(self, *args, **kwargs):
-        self.stdout.write('Starting students_info sync...')
+        triggered_by = kwargs.get('triggered_by', 'manual')
+        self.stdout.write(f'Starting students_info sync (triggered_by={triggered_by})...')
         try:
-            log = run_sync_students(triggered_by='manual')
+            log = run_sync_students(triggered_by=triggered_by)
             self.stdout.write(self.style.SUCCESS(
                 f'Sync completed: {log.records_synced} records synced '
                 f'(before={log.records_before}, after={log.records_after}, '
