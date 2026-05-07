@@ -73,6 +73,18 @@
                 Dashboard
             </a>
 
+            <!-- Executive Dashboard -->
+            <a href="{% url 'dashboard_system:home' %}"
+               class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
+               {% if request.resolver_match.app_name == 'dashboard_system' %}
+                   bg-blue-600 text-white
+               {% else %}
+                   text-slate-400 hover:bg-slate-800 hover:text-white
+               {% endif %}">
+                <i class="fas fa-chart-pie w-5 text-center mr-3 {% if request.resolver_match.app_name == 'dashboard_system' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
+                Executive
+            </a>
+
             <!-- Section label -->
             <div class="pt-5 pb-2">
                 <p class="text-xs font-semibold text-slate-600 uppercase tracking-wider px-3">ข้อมูล</p>
