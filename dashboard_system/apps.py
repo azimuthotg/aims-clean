@@ -8,4 +8,4 @@ class DashboardSystemConfig(AppConfig):
     
     def ready(self):
         """Initialize Dashboard System when Django starts"""
-        print("🚀 AIMS Dashboard System v2.0 - Management Analytics Platform Ready!")
+        print("[AIMS] Dashboard System v2.0 - Management Analytics Platform Ready!")
