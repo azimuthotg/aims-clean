@@ -64,12 +64,12 @@
             <!-- Dashboard -->
             <a href="{% url 'dashboard:home' %}"
                class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
-               {% if request.resolver_match.url_name == 'home' %}
+               {% if request.resolver_match.url_name == 'home' and request.resolver_match.app_name == 'dashboard' %}
                    bg-blue-600 text-white
                {% else %}
                    text-slate-400 hover:bg-slate-800 hover:text-white
                {% endif %}">
-                <i class="fas fa-chart-bar w-5 text-center mr-3 {% if request.resolver_match.url_name == 'home' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
+                <i class="fas fa-chart-bar w-5 text-center mr-3 {% if request.resolver_match.url_name == 'home' and request.resolver_match.app_name == 'dashboard' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
                 Dashboard
             </a>
 
