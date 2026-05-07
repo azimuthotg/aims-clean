@@ -1,425 +1,362 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
 {% load humanize %}
 
-{% block title %}{{ page_title }} - AIMS Dashboard System v2.0{% endblock %}
+{% block title %}Executive Dashboard — AIMS{% endblock %}
 
-{% block extra_css %}
-<style>
-    /* Executive Dashboard Specific Styles */
-    .executive-kpi-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 15px;
-        padding: 25px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease;
-    }
-    
-    .executive-kpi-card:hover {
-        transform: translateY(-5px);
-    }
-    
-    .kpi-value {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 5px;
-    }
-    
-    .kpi-label {
-        font-size: 1.1rem;
-        opacity: 0.9;
-    }
-    
-    .trend-indicator {
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-    
-    .trend-positive {
-        color: #28a745;
-    }
-    
-    .trend-negative {
-        color: #dc3545;
-    }
-    
-    .executive-insights {
-        background: #f8f9fa;
-        border-left: 5px solid #2563eb;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 20px 0;
-    }
-    
-    .system-header {
-        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-        color: white;
-        padding: 30px;
-        border-radius: 15px;
-        text-align: center;
-        margin-bottom: 30px;
-    }
-    
-    .quick-action-btn {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        border: none;
-        color: white;
-        padding: 12px 25px;
-        border-radius: 25px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        margin: 5px;
-    }
-    
-    .quick-action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        color: white;
-    }
-</style>
+{% block breadcrumb %}
+<a href="{% url 'dashboard:home' %}" class="text-slate-400 hover:text-slate-600">Dashboard</a>
+<span class="mx-2 text-slate-300">/</span>
+<span class="text-slate-700 font-medium">Executive Dashboard</span>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- System Header -->
-    <div class="system-header">
-        <h1><i class="fas fa-chart-line me-3"></i>{{ system_name }}</h1>
-        <p class="mb-0">Advanced Analytics Dashboard for Management Decision Making</p>
-        <small>Version {{ system_version }} | Real-time Data</small>
+
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-xl font-bold text-slate-900">Executive Dashboard</h1>
+        <p class="text-sm text-slate-500 mt-1">ภาพรวมข้อมูลบุคลากร นักศึกษา และสถิติงานบริการ สำหรับผู้บริหาร</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{% url 'dashboard:sync' %}"
+           class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium
+                  bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
+            <i class="fas fa-sync-alt"></i> Sync Monitor
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-users text-blue-600"></i>
+            </div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">บุคลากรทั้งหมด</p>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ total_staff|intcomma }}</p>
+        <p class="text-xs text-slate-400 mt-1">คน</p>
     </div>
 
-    <!-- Executive KPIs Row -->
-    <div class="row">
-        <div class="col-lg-3 col-md-6">
-            <div class="executive-kpi-card">
-                <div class="kpi-value">{{ total_staff|intcomma }}</div>
-                <div class="kpi-label">Total Personnel</div>
-                <div class="trend-indicator trend-positive">+5.2%</div>
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-graduation-cap text-emerald-600"></i>
             </div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">นักศึกษาทั้งหมด</p>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="executive-kpi-card">
-                <div class="kpi-value">{{ total_students|intcomma }}</div>
-                <div class="kpi-label">Total Students</div>
-                <div class="trend-indicator trend-positive">+12.1%</div>
+        <p class="text-3xl font-bold text-slate-900">{{ total_students|intcomma }}</p>
+        <p class="text-xs text-slate-400 mt-1">คน</p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-chart-line text-amber-500"></i>
             </div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">สถิติงานบริการ</p>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="executive-kpi-card">
-                <div class="kpi-value">{{ total_services }}</div>
-                <div class="kpi-label">Active Services</div>
-                <div class="trend-indicator trend-positive">+8.7%</div>
+        <p class="text-3xl font-bold text-slate-900">{{ total_services }}</p>
+        <p class="text-xs text-slate-400 mt-1">รายการ</p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-circle-check text-green-500"></i>
             </div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">สถานะระบบ</p>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="executive-kpi-card">
-                <div class="kpi-value">Excellent</div>
-                <div class="kpi-label">System Health</div>
-                <div class="trend-indicator trend-positive">+15.3%</div>
+        <p class="text-xl font-bold text-green-600">ปกติ</p>
+        <p class="text-xs text-slate-400 mt-1" id="last-updated">กำลังโหลด...</p>
+    </div>
+
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">เข้าถึงข้อมูลโดยตรง</p>
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'dashboard:staff' %}"
+           class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+            <i class="fas fa-users"></i> ข้อมูลบุคลากร
+        </a>
+        <a href="{% url 'dashboard:student' %}"
+           class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+            <i class="fas fa-graduation-cap"></i> ข้อมูลนักศึกษา
+        </a>
+        <a href="{% url 'dashboard:service_statistics' %}"
+           class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-amber-500 text-white hover:bg-amber-600 transition-colors">
+            <i class="fas fa-chart-line"></i> สถิติงานบริการ
+        </a>
+        {% if user.can_manage_users %}
+        <a href="{% url 'user_management' %}"
+           class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 transition-colors">
+            <i class="fas fa-user-cog"></i> จัดการผู้ใช้
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+    <!-- Staff Department Chart -->
+    <div class="bg-white rounded-xl border border-slate-200">
+        <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <i class="fas fa-users text-blue-600 text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">บุคลากรตามหน่วยงาน</p>
+                    <p class="text-xs text-slate-400">Top 10 หน่วยงาน</p>
+                </div>
             </div>
+            <a href="{% url 'dashboard:staff' %}" class="text-xs text-blue-600 hover:underline">ดูทั้งหมด →</a>
+        </div>
+        <div class="p-4">
+            <div id="staffDepartmentChart"></div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+    <!-- Student Faculty Chart -->
+    <div class="bg-white rounded-xl border border-slate-200">
+        <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <i class="fas fa-graduation-cap text-emerald-600 text-sm"></i>
                 </div>
-                <div class="card-body text-center">
-                    <a href="{% url 'dashboard:staff' %}" class="btn quick-action-btn">
-                        <i class="fas fa-users me-2"></i>Staff Details
-                    </a>
-                    <a href="{% url 'dashboard:student' %}" class="btn quick-action-btn">
-                        <i class="fas fa-graduation-cap me-2"></i>Student Details
-                    </a>
-                    <a href="{% url 'dashboard:service_statistics' %}" class="btn quick-action-btn">
-                        <i class="fas fa-chart-line me-2"></i>Service Statistics
-                    </a>
-                    <a href="{% url 'dashboard_system:reports' %}" class="btn quick-action-btn">
-                        <i class="fas fa-file-alt me-2"></i>Reports Center
-                    </a>
-                    <button class="btn quick-action-btn" onclick="exportExecutiveSummary()">
-                        <i class="fas fa-download me-2"></i>Export Summary
-                    </button>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">นักศึกษาตามคณะ</p>
+                    <p class="text-xs text-slate-400">Top 10 คณะ</p>
                 </div>
             </div>
+            <a href="{% url 'dashboard:student' %}" class="text-xs text-blue-600 hover:underline">ดูทั้งหมด →</a>
+        </div>
+        <div class="p-4">
+            <div id="studentFacultyChart"></div>
         </div>
     </div>
 
-    <!-- Main Analytics Cards -->
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Staff Distribution by Department</h5>
-                    <a href="{% url 'dashboard:staff' %}" class="btn btn-light btn-sm">
-                        <i class="fas fa-external-link-alt"></i> View Details
-                    </a>
+</div>
+
+<!-- Staff Type & Gender + Student Level & Gender -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+    <!-- Staff Type Chart -->
+    <div class="bg-white rounded-xl border border-slate-200">
+        <div class="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-slate-100">
+            <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                <i class="fas fa-id-badge text-purple-600 text-sm"></i>
+            </div>
+            <div>
+                <p class="text-sm font-semibold text-slate-900">บุคลากรตามประเภท</p>
+                <p class="text-xs text-slate-400">สัดส่วนแต่ละประเภทบุคลากร</p>
+            </div>
+        </div>
+        <div class="p-4">
+            <div id="staffTypeChart"></div>
+        </div>
+    </div>
+
+    <!-- Student Level Chart -->
+    <div class="bg-white rounded-xl border border-slate-200">
+        <div class="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-slate-100">
+            <div class="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center">
+                <i class="fas fa-layer-group text-cyan-600 text-sm"></i>
+            </div>
+            <div>
+                <p class="text-sm font-semibold text-slate-900">นักศึกษาตามระดับการศึกษา</p>
+                <p class="text-xs text-slate-400">สัดส่วนแต่ละระดับ</p>
+            </div>
+        </div>
+        <div class="p-4">
+            <div id="studentLevelChart"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Top Lists -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+    <!-- Top Departments -->
+    <div class="bg-white rounded-xl border border-slate-200">
+        <div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
+            <p class="text-sm font-semibold text-slate-900">Top หน่วยงานบุคลากร</p>
+            <span class="text-xs text-slate-400">{{ total_staff|intcomma }} คน รวม</span>
+        </div>
+        <div class="divide-y divide-slate-50">
+            {% for dept in staff_departments %}
+            <div class="flex items-center justify-between px-5 py-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="text-xs font-medium text-slate-400 w-5 flex-shrink-0">{{ forloop.counter }}</span>
+                    <span class="text-sm text-slate-700 truncate">{{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}</span>
                 </div>
-                <div class="card-body">
-                    <div id="staffDepartmentChart" style="height: 400px;"></div>
-                    
-                    <!-- Top 5 Departments Summary -->
-                    <div class="mt-3">
-                        <h6>Top 5 Departments:</h6>
-                        {% if staff_departments %}
-                        <div class="row">
-                            {% for dept in staff_departments|slice:":5" %}
-                            <div class="col-12 mb-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="small">{{ dept.DEPARTMENTNAME|default:"ไม่ระบุ" }}</span>
-                                    <span class="badge bg-primary">{{ dept.count|default:0 }}</span>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <p class="text-muted small">ไม่มีข้อมูลสำหรับแสดงผล</p>
-                        {% endif %}
+                <div class="flex items-center gap-3 flex-shrink-0 ml-3">
+                    <div class="w-20 bg-slate-100 rounded-full h-1.5">
+                        <div class="bg-blue-500 h-1.5 rounded-full"
+                             style="width: {% widthratio dept.count total_staff 100 %}%"></div>
                     </div>
+                    <span class="text-sm font-semibold text-slate-900 w-12 text-right">{{ dept.count|intcomma }}</span>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Student Distribution by Faculty</h5>
-                    <a href="{% url 'dashboard:student' %}" class="btn btn-light btn-sm">
-                        <i class="fas fa-external-link-alt"></i> View Details
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div id="studentFacultyChart" style="height: 400px;"></div>
-                    
-                    <!-- Top 5 Faculties Summary -->
-                    <div class="mt-3">
-                        <h6>Top 5 Faculties:</h6>
-                        {% if student_faculties %}
-                        <div class="row">
-                            {% for fac in student_faculties|slice:":5" %}
-                            <div class="col-12 mb-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="small">{{ fac.faculty_name|default:"ไม่ระบุ" }}</span>
-                                    <span class="badge bg-info">{{ fac.count|default:0 }}</span>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <p class="text-muted small">ไม่มีข้อมูลสำหรับแสดงผล</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+            {% empty %}
+            <p class="px-5 py-4 text-sm text-slate-400">ไม่มีข้อมูล</p>
+            {% endfor %}
         </div>
     </div>
 
-    <!-- Additional Analytics Access -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-secondary text-white">
-                    <h5><i class="fas fa-chart-line me-2"></i>Additional Analytics</h5>
+    <!-- Top Faculties -->
+    <div class="bg-white rounded-xl border border-slate-200">
+        <div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
+            <p class="text-sm font-semibold text-slate-900">Top คณะนักศึกษา</p>
+            <span class="text-xs text-slate-400">{{ total_students|intcomma }} คน รวม</span>
+        </div>
+        <div class="divide-y divide-slate-50">
+            {% for fac in student_faculties %}
+            <div class="flex items-center justify-between px-5 py-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="text-xs font-medium text-slate-400 w-5 flex-shrink-0">{{ forloop.counter }}</span>
+                    <span class="text-sm text-slate-700 truncate">{{ fac.faculty_name|default:"ไม่ระบุ" }}</span>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-lg-4 col-md-6 mb-3">
-                            <div class="info-box bg-gradient-success">
-                                <span class="info-box-icon"><i class="fas fa-chart-bar"></i></span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">Service Statistics</span>
-                                    <span class="info-box-number">{{ total_services|default:0 }}</span>
-                                    <a href="{% url 'dashboard:service_statistics' %}" class="btn btn-light btn-sm mt-2">
-                                        <i class="fas fa-arrow-right"></i> View Details
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4 col-md-6 mb-3">
-                            <div class="info-box bg-gradient-info">
-                                <span class="info-box-icon"><i class="fas fa-database"></i></span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">Database Status</span>
-                                    <span class="info-box-number">Connected</span>
-                                    <a href="{% url 'dashboard:home' %}" class="btn btn-light btn-sm mt-2">
-                                        <i class="fas fa-arrow-right"></i> Go to Dashboard
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4 col-md-6 mb-3">
-                            <div class="info-box bg-gradient-warning">
-                                <span class="info-box-icon"><i class="fas fa-cog"></i></span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">System Settings</span>
-                                    <span class="info-box-number">Admin</span>
-                                    {% if user.can_manage_users %}
-                                    <a href="{% url 'user_management' %}" class="btn btn-light btn-sm mt-2">
-                                        <i class="fas fa-arrow-right"></i> Manage Users
-                                    </a>
-                                    {% else %}
-                                    <span class="text-muted small">Access Restricted</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
+                <div class="flex items-center gap-3 flex-shrink-0 ml-3">
+                    <div class="w-20 bg-slate-100 rounded-full h-1.5">
+                        <div class="bg-emerald-500 h-1.5 rounded-full"
+                             style="width: {% widthratio fac.count total_students 100 %}%"></div>
                     </div>
+                    <span class="text-sm font-semibold text-slate-900 w-12 text-right">{{ fac.count|intcomma }}</span>
                 </div>
             </div>
+            {% empty %}
+            <p class="px-5 py-4 text-sm text-slate-400">ไม่มีข้อมูล</p>
+            {% endfor %}
         </div>
     </div>
 
-    <!-- Data Sources Info -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3">
-                            <i class="fas fa-database fa-2x text-primary mb-2"></i>
-                            <h6>Staff Database</h6>
-                            <small class="text-muted">Live Connection</small>
-                        </div>
-                        <div class="col-md-3">
-                            <i class="fas fa-users fa-2x text-success mb-2"></i>
-                            <h6>Student Database</h6>
-                            <small class="text-muted">Live Connection</small>
-                        </div>
-                        <div class="col-md-3">
-                            <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
-                            <h6>Service Statistics</h6>
-                            <small class="text-muted">Google Sheets API</small>
-                        </div>
-                        <div class="col-md-3">
-                            <i class="fas fa-clock fa-2x text-info mb-2"></i>
-                            <h6>Last Updated</h6>
-                            <small class="text-muted" id="last-updated">Loading...</small>
-                        </div>
-                    </div>
-                </div>
+</div>
+
+<!-- Data Sources Status -->
+<div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">แหล่งข้อมูล</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
+            <div>
+                <p class="text-sm font-medium text-slate-700">ฐานข้อมูลบุคลากร</p>
+                <p class="text-xs text-slate-400">MySQL — เชื่อมต่อแล้ว</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
+            <div>
+                <p class="text-sm font-medium text-slate-700">ฐานข้อมูลนักศึกษา</p>
+                <p class="text-xs text-slate-400">MySQL — เชื่อมต่อแล้ว</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
+            <div>
+                <p class="text-sm font-medium text-slate-700">สถิติงานบริการ</p>
+                <p class="text-xs text-slate-400">Google Sheets API</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+            <div>
+                <p class="text-sm font-medium text-slate-700">อัปเดตล่าสุด</p>
+                <p class="text-xs text-slate-400" id="last-updated-footer">—</p>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize main charts
-    initializeMainCharts();
-    
-    // Update timestamp
-    document.getElementById('last-updated').textContent = new Date().toLocaleString('th-TH');
-    
-    console.log('✅ Executive Dashboard (Simplified) loaded successfully');
+document.addEventListener('DOMContentLoaded', function () {
+    const now = new Date().toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+    document.getElementById('last-updated').textContent = now;
+    document.getElementById('last-updated-footer').textContent = now;
+
+    const COLORS = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16','#f97316','#ec4899','#6366f1'];
+
+    // Staff Department Donut
+    const deptLabels = {{ staff_department_labels|safe }};
+    const deptData   = {{ staff_department_data|safe }};
+    if (deptLabels.length) {
+        new ApexCharts(document.querySelector('#staffDepartmentChart'), {
+            series: deptData,
+            chart: { type: 'donut', height: 320 },
+            labels: deptLabels,
+            colors: COLORS,
+            legend: { position: 'bottom', fontSize: '11px' },
+            plotOptions: { pie: { donut: { size: '60%', labels: { show: true,
+                total: { show: true, label: 'รวม', fontSize: '14px', fontWeight: 600,
+                    formatter: () => deptData.reduce((a,b)=>a+b,0).toLocaleString() }
+            }}}},
+            dataLabels: { enabled: false },
+            tooltip: { y: { formatter: v => v.toLocaleString() + ' คน' } }
+        }).render();
+    }
+
+    // Student Faculty Pie
+    const facLabels = {{ student_faculty_labels|safe }};
+    const facData   = {{ student_faculty_data|safe }};
+    if (facLabels.length) {
+        new ApexCharts(document.querySelector('#studentFacultyChart'), {
+            series: facData,
+            chart: { type: 'donut', height: 320 },
+            labels: facLabels,
+            colors: ['#10b981','#06b6d4','#f59e0b','#ef4444','#8b5cf6','#2563eb','#84cc16','#f97316','#ec4899','#6366f1'],
+            legend: { position: 'bottom', fontSize: '11px' },
+            plotOptions: { pie: { donut: { size: '60%', labels: { show: true,
+                total: { show: true, label: 'รวม', fontSize: '14px', fontWeight: 600,
+                    formatter: () => facData.reduce((a,b)=>a+b,0).toLocaleString() }
+            }}}},
+            dataLabels: { enabled: false },
+            tooltip: { y: { formatter: v => v.toLocaleString() + ' คน' } }
+        }).render();
+    }
+
+    // Staff Type Bar
+    const typeLabels = {{ staff_type_labels|safe }};
+    const typeData   = {{ staff_type_data|safe }};
+    if (typeLabels.length) {
+        new ApexCharts(document.querySelector('#staffTypeChart'), {
+            series: [{ name: 'จำนวน', data: typeData }],
+            chart: { type: 'bar', height: 280, toolbar: { show: false } },
+            xaxis: { categories: typeLabels, labels: { style: { fontSize: '11px' } } },
+            colors: ['#2563eb'],
+            plotOptions: { bar: { borderRadius: 4, horizontal: false, columnWidth: '55%' } },
+            dataLabels: { enabled: true, style: { fontSize: '11px' } },
+            tooltip: { y: { formatter: v => v.toLocaleString() + ' คน' } },
+            grid: { borderColor: '#f1f5f9' }
+        }).render();
+    }
+
+    // Student Level Donut
+    const levelLabels = {{ student_level_labels|safe }};
+    const levelData   = {{ student_level_data|safe }};
+    if (levelLabels.length) {
+        new ApexCharts(document.querySelector('#studentLevelChart'), {
+            series: levelData,
+            chart: { type: 'donut', height: 280 },
+            labels: levelLabels,
+            colors: ['#06b6d4','#2563eb','#10b981','#f59e0b','#8b5cf6','#ef4444'],
+            legend: { position: 'bottom', fontSize: '11px' },
+            plotOptions: { pie: { donut: { size: '65%', labels: { show: true,
+                total: { show: true, label: 'รวม', fontSize: '14px', fontWeight: 600,
+                    formatter: () => levelData.reduce((a,b)=>a+b,0).toLocaleString() }
+            }}}},
+            dataLabels: { enabled: true, formatter: (v) => v.toFixed(1) + '%' },
+            tooltip: { y: { formatter: v => v.toLocaleString() + ' คน' } }
+        }).render();
+    }
 });
-
-function initializeMainCharts() {
-    // Staff Department Chart (Primary)
-    if ({{ staff_department_labels|safe }}.length > 0) {
-        const staffDeptOptions = {
-            series: {{ staff_department_data|safe }},
-            chart: {
-                type: 'donut',
-                height: 350
-            },
-            labels: {{ staff_department_labels|safe }},
-            title: {
-                text: 'Staff by Department',
-                align: 'center',
-                style: {
-                    fontSize: '16px',
-                    fontWeight: 600
-                }
-            },
-            colors: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1'],
-            legend: {
-                position: 'bottom'
-            },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '60%',
-                        labels: {
-                            show: true,
-                            total: {
-                                show: true,
-                                label: 'Total Staff',
-                                fontSize: '16px',
-                                fontWeight: 600
-                            }
-                        }
-                    }
-                }
-            },
-            dataLabels: {
-                enabled: true,
-                formatter: function (val) {
-                    return val.toFixed(1) + "%"
-                }
-            }
-        };
-        const staffDeptChart = new ApexCharts(document.querySelector("#staffDepartmentChart"), staffDeptOptions);
-        staffDeptChart.render();
-        
-        // Register for export functionality
-        window.registerChart('staffDepartmentChart', staffDeptChart);
-        window.addChartExportButtons('staffDepartmentChart', 'Staff Distribution by Department');
-    }
-    
-    // Student Faculty Chart (Primary)
-    if ({{ student_faculty_labels|safe }}.length > 0) {
-        const studentFacOptions = {
-            series: {{ student_faculty_data|safe }},
-            chart: {
-                type: 'pie',
-                height: 350
-            },
-            labels: {{ student_faculty_labels|safe }},
-            title: {
-                text: 'Students by Faculty',
-                align: 'center',
-                style: {
-                    fontSize: '16px',
-                    fontWeight: 600
-                }
-            },
-            colors: ['#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981', '#ec4899', '#84cc16', '#f97316'],
-            legend: {
-                position: 'bottom'
-            },
-            plotOptions: {
-                pie: {
-                    expandOnClick: true
-                }
-            },
-            dataLabels: {
-                enabled: true,
-                formatter: function (val) {
-                    return val.toFixed(1) + "%"
-                }
-            }
-        };
-        const studentFacChart = new ApexCharts(document.querySelector("#studentFacultyChart"), studentFacOptions);
-        studentFacChart.render();
-        
-        // Register for export functionality
-        window.registerChart('studentFacultyChart', studentFacChart);
-        window.addChartExportButtons('studentFacultyChart', 'Student Distribution by Faculty');
-    }
-}
-
-function exportExecutiveSummary() {
-    console.log('📊 Exporting executive summary...');
-    alert('Executive Summary export feature will be implemented. This will generate a comprehensive PDF report for management.');
-}
 </script>
 {% endblock %}
