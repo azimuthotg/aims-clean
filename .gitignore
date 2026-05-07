@@ -14,6 +14,7 @@ __pycache__/
 # Virtual environments
 aims_env/
 venv/
+venv_new/
 venv_linux/
 env/
 ENV/
@@ -40,6 +41,7 @@ Thumbs.db
 capture/
 conversation-*.txt
 config.json
+static/demo/
 
 # Byte-compiled / optimized / DLL files
 *.pyc

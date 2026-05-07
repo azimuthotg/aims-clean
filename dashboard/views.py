@@ -1793,4 +1793,111 @@ def export_level_excel(request, level_name):
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     wb.save(response)
+
+
+# ─────────────────────────────────────────────
+# Sync Monitor Views
+# ─────────────────────────────────────────────
+
+@login_required
+def sync_monitor_view(request):
+    from .models import SyncLog
+
+    last_staff = SyncLog.objects.filter(table_name='staff_info').first()
+    last_students = SyncLog.objects.filter(table_name='students_info').first()
+
+    staff_count = None
+    students_count = None
+    try:
+        conn = get_db_connection()
+        if conn:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM staff_info")
+            staff_count = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) FROM students_info")
+            students_count = cur.fetchone()[0]
+            cur.close()
+            conn.close()
+    except Exception:
+        pass
+
+    history = SyncLog.objects.all()[:30]
+
+    context = {
+        'last_staff': last_staff,
+        'last_students': last_students,
+        'staff_count': staff_count,
+        'students_count': students_count,
+        'history': history,
+    }
+    return render(request, 'dashboard/sync_monitor.html', context)
+
+
+@login_required
+def sync_trigger_api(request):
+    import threading
+    from .models import SyncLog
+    from dashboard.management.commands.sync_staff import run_sync_staff
+    from dashboard.management.commands.sync_students import run_sync_students
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    if request.user.user_role not in ('super_admin', 'staff_admin'):
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    table = request.POST.get('table', '')
+    if table not in ('staff_info', 'students_info', 'all'):
+        return JsonResponse({'error': 'Invalid table'}, status=400)
+
+    started_ids = []
+
+    if table in ('staff_info', 'all'):
+        log = SyncLog.objects.create(
+            table_name='staff_info', status='running',
+            triggered_by='manual', triggered_user=request.user,
+        )
+        started_ids.append({'table': 'staff_info', 'log_id': log.id})
+        user = request.user
+        staff_log = log
+        t = threading.Thread(
+            target=lambda: run_sync_staff(triggered_by='manual', triggered_user=user, existing_log=staff_log),
+            daemon=True,
+        )
+        t.start()
+
+    if table in ('students_info', 'all'):
+        log = SyncLog.objects.create(
+            table_name='students_info', status='running',
+            triggered_by='manual', triggered_user=request.user,
+        )
+        started_ids.append({'table': 'students_info', 'log_id': log.id})
+        user = request.user
+        students_log = log
+        t = threading.Thread(
+            target=lambda: run_sync_students(triggered_by='manual', triggered_user=user, existing_log=students_log),
+            daemon=True,
+        )
+        t.start()
+
+    return JsonResponse({'status': 'started', 'jobs': started_ids})
+
+
+@login_required
+def sync_status_api(request, log_id):
+    from .models import SyncLog
+    try:
+        log = SyncLog.objects.get(pk=log_id)
+    except SyncLog.DoesNotExist:
+        return JsonResponse({'error': 'Not found'}, status=404)
+
+    return JsonResponse({
+        'status': log.status,
+        'records_synced': log.records_synced,
+        'records_before': log.records_before,
+        'records_after': log.records_after,
+        'duration_seconds': log.duration_seconds,
+        'error_message': log.error_message,
+        'finished_at': log.finished_at.isoformat() if log.finished_at else None,
+    })
     return response

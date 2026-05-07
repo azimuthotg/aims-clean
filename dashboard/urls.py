@@ -19,6 +19,11 @@ urlpatterns = [
     path('student/export/excel/', views.export_student_excel, name='export_student_excel'),
     path('service-statistics/', views.service_statistics_view, name='service_statistics'),
 
+    # Sync Monitor
+    path('sync/', views.sync_monitor_view, name='sync_monitor'),
+    path('sync/trigger/', views.sync_trigger_api, name='sync_trigger'),
+    path('sync/status/<int:log_id>/', views.sync_status_api, name='sync_status'),
+
     # Push Notifications
     path('push/subscribe/', subscribe_push, name='push_subscribe'),
     path('push/unsubscribe/', unsubscribe_push, name='push_unsubscribe'),

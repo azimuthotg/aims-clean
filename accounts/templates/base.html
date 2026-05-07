@@ -132,6 +132,18 @@
                 จัดการผู้ใช้
             </a>
 
+            <!-- Sync Monitor -->
+            <a href="{% url 'dashboard:sync_monitor' %}"
+               class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
+               {% if request.resolver_match.url_name == 'sync_monitor' %}
+                   bg-blue-600 text-white
+               {% else %}
+                   text-slate-400 hover:bg-slate-800 hover:text-white
+               {% endif %}">
+                <i class="fas fa-rotate w-5 text-center mr-3 {% if request.resolver_match.url_name == 'sync_monitor' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
+                Sync Monitor
+            </a>
+
             <!-- Django Admin (super_admin only) -->
             {% if user.user_role == 'super_admin' %}
             <a href="/admin/" target="_blank"

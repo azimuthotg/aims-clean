@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     'accounts',
     'dashboard',
     'dashboard_system',  # Executive Dashboard System v2.0
+    'django_apscheduler',
 ]
 
 MIDDLEWARE = [
