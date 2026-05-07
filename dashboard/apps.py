@@ -10,7 +10,8 @@ class DashboardConfig(AppConfig):
         import os
         # Only start in server processes, not during migrate/makemigrations/shell/etc.
         server_commands = {'runserver', 'waitress_serve'}
-        if not any(cmd in sys.argv for cmd in server_commands):
+        argv_str = ' '.join(sys.argv)
+        if not any(cmd in argv_str for cmd in server_commands):
             return
         if os.environ.get('SCHEDULER_ENABLED', 'true').lower() != 'true':
             return
