@@ -45,3 +45,4 @@ static/demo/
 
 # Byte-compiled / optimized / DLL files
 *.pyc
+logs/
