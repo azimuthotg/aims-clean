@@ -2,7 +2,33 @@ from django import template
 from django.utils.safestring import mark_safe
 import locale
 
+THAI_MONTHS = [
+    '', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
+]
+
 register = template.Library()
+
+@register.filter
+def thai_date(value, show_time=False):
+    """แสดงวันที่แบบไทย: 7 พฤษภาคม 2569"""
+    try:
+        if value is None:
+            return '—'
+        day = value.day
+        month = THAI_MONTHS[value.month]
+        year = value.year + 543
+        result = f'{day} {month} {year}'
+        if show_time:
+            result += f' {value.strftime("%H:%M")} น.'
+        return result
+    except (AttributeError, IndexError):
+        return '—'
+
+@register.filter
+def thai_datetime(value):
+    """แสดงวันที่และเวลาแบบไทย: 7 พฤษภาคม 2569 06:35 น."""
+    return thai_date(value, show_time=True)
 
 @register.filter
 def format_number(value):

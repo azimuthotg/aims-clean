@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize number_format %}
 
 {% block title %}Sync Monitor — AIMS{% endblock %}
 
@@ -70,8 +70,7 @@
         <div>
           <p class="text-xs text-slate-400 mb-0.5">เวลา sync ล่าสุด</p>
           {% if last_staff %}
-            <p class="text-xs font-medium text-slate-700">{{ last_staff.started_at|date:"d/m/Y" }}</p>
-            <p class="text-xs text-slate-500">{{ last_staff.started_at|date:"H:i" }} น.</p>
+            <p class="text-xs font-medium text-slate-700">{{ last_staff.started_at|thai_datetime }}</p>
           {% else %}
             <p class="text-sm text-slate-400">—</p>
           {% endif %}
@@ -136,8 +135,7 @@
         <div>
           <p class="text-xs text-slate-400 mb-0.5">เวลา sync ล่าสุด</p>
           {% if last_students %}
-            <p class="text-xs font-medium text-slate-700">{{ last_students.started_at|date:"d/m/Y" }}</p>
-            <p class="text-xs text-slate-500">{{ last_students.started_at|date:"H:i" }} น.</p>
+            <p class="text-xs font-medium text-slate-700">{{ last_students.started_at|thai_datetime }}</p>
           {% else %}
             <p class="text-sm text-slate-400">—</p>
           {% endif %}
@@ -269,7 +267,7 @@
               {% endif %}
             </td>
             <td class="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
-              {{ log.started_at|date:"d/m/Y H:i" }}
+              {{ log.started_at|thai_datetime }}
             </td>
             <td class="px-4 py-3 text-right">
               {% if log.status == 'success' %}
