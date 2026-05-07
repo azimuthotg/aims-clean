@@ -355,7 +355,7 @@ function showProgress(jobs) {
 function pollStatus(logId, label) {
   const interval = setInterval(async () => {
     try {
-      const resp = await fetch(`/dashboard/sync/status/${logId}/`);
+      const resp = await fetch(`{% url 'dashboard:sync_status' 0 %}`.replace('/0/', `/${logId}/`));
       const data = await resp.json();
       const el = document.getElementById(`progress-${logId}`);
       const textEl = document.getElementById(`progress-text-${logId}`);
@@ -393,7 +393,7 @@ async function triggerSync(table) {
     formData.append('table', table);
     formData.append('csrfmiddlewaretoken', CSRF);
 
-    const resp = await fetch('/dashboard/sync/trigger/', {
+    const resp = await fetch('{% url "dashboard:sync_trigger" %}', {
       method: 'POST',
       body: formData,
     });
