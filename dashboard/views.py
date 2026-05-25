@@ -1916,6 +1916,9 @@ def search_view(request):
             results = search_staff(query)
         else:
             results = search_students(query)
+        for row in results:
+            raw = row.get('line_user_id')
+            row['line_ids'] = raw.split(', ') if raw else []
     return render(request, 'dashboard/search.html', {
         'tab': tab,
         'query': query,
