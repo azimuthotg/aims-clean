@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .database_utils import get_staff_summary,get_student_summary,get_db_connection,get_department_detail,get_faculty_detail,get_level_detail,get_available_years
+from .database_utils import get_staff_summary,get_student_summary,get_db_connection,get_department_detail,get_faculty_detail,get_level_detail,get_available_years,search_staff,search_students
 import json
 import mysql.connector
 from .sheets_utils import get_service_statistics, get_formatted_statistics
@@ -1901,3 +1901,24 @@ def sync_status_api(request, log_id):
         'finished_at': log.finished_at.isoformat() if log.finished_at else None,
     })
     return response
+
+@login_required
+def search_view(request):
+    tab = request.GET.get('tab', 'staff')
+    if tab not in ('staff', 'student'):
+        tab = 'staff'
+    query = request.GET.get('q', '').strip()
+    results = []
+    searched = False
+    if query and len(query) >= 2:
+        searched = True
+        if tab == 'staff':
+            results = search_staff(query)
+        else:
+            results = search_students(query)
+    return render(request, 'dashboard/search.html', {
+        'tab': tab,
+        'query': query,
+        'results': results,
+        'searched': searched,
+    })

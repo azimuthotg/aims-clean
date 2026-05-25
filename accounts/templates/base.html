@@ -114,6 +114,18 @@
                 นักศึกษา
             </a>
 
+            <!-- ค้นหาข้อมูล -->
+            <a href="{% url 'dashboard:search' %}"
+               class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group
+               {% if request.resolver_match.url_name == 'search' %}
+                   bg-blue-600 text-white
+               {% else %}
+                   text-slate-400 hover:bg-slate-800 hover:text-white
+               {% endif %}">
+                <i class="fas fa-magnifying-glass w-5 text-center mr-3 {% if request.resolver_match.url_name == 'search' %}text-white{% else %}text-slate-500 group-hover:text-white{% endif %}"></i>
+                ค้นหาข้อมูล
+            </a>
+
             <!-- สถิติงานบริการ -->
             <a href="{% url 'dashboard:service_statistics' %}"
                class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group

@@ -17,6 +17,7 @@ urlpatterns = [
     path('student/level/export/<path:level_name>/', views.export_level_excel, name='export_level_excel'),
     path('student/level/<path:level_name>/', views.level_detail, name='level_detail'),
     path('student/export/excel/', views.export_student_excel, name='export_student_excel'),
+    path('search/', views.search_view, name='search'),
     path('service-statistics/', views.service_statistics_view, name='service_statistics'),
 
     # Sync Monitor

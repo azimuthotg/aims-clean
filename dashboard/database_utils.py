@@ -390,6 +390,98 @@ def get_faculty_detail(faculty_name, year_filter=None):
         if connection and connection.is_connected():
             connection.close()
 
+def search_staff(query, limit=100):
+    """
+    ค้นหาบุคลากรจากชื่อ-สกุล รหัสบุคลากร หรือหน่วยงาน
+    พร้อม LEFT JOIN apiapp_userprofile เพื่อแสดง LINE userId
+    """
+    connection = get_db_connection()
+    if not connection:
+        return []
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+        like_query = f"%{query}%"
+        cursor.execute("""
+            SELECT
+                s.STAFFID,
+                s.PREFIXFULLNAME,
+                s.STAFFNAME,
+                s.STAFFSURNAME,
+                s.POSNAMETH,
+                s.STFTYPENAME,
+                s.DEPARTMENTNAME,
+                GROUP_CONCAT(u.userId SEPARATOR ', ') AS line_user_id
+            FROM staff_info s
+            LEFT JOIN apiapp_userprofile u ON u.userLdap = s.STAFFCITIZENID
+            WHERE s.STAFFNAME LIKE %s
+               OR s.STAFFSURNAME LIKE %s
+               OR s.STAFFID LIKE %s
+               OR s.DEPARTMENTNAME LIKE %s
+               OR CONCAT(s.STAFFNAME, ' ', s.STAFFSURNAME) LIKE %s
+            GROUP BY s.STAFFID, s.PREFIXFULLNAME, s.STAFFNAME, s.STAFFSURNAME,
+                     s.POSNAMETH, s.STFTYPENAME, s.DEPARTMENTNAME
+            ORDER BY s.STAFFNAME, s.STAFFSURNAME
+            LIMIT %s
+        """, (like_query, like_query, like_query, like_query, like_query, limit))
+        results = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return results
+    except mysql.connector.Error as e:
+        print(f"เกิดข้อผิดพลาดในการค้นหาบุคลากร: {e}")
+        return []
+    finally:
+        if connection and connection.is_connected():
+            connection.close()
+
+
+def search_students(query, limit=100):
+    """
+    ค้นหานักศึกษาจากชื่อ-สกุล รหัสนักศึกษา หรือคณะ
+    พร้อม LEFT JOIN apiapp_userprofile เพื่อแสดง LINE userId
+    """
+    connection = get_db_connection()
+    if not connection:
+        return []
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+        like_query = f"%{query}%"
+        cursor.execute("""
+            SELECT
+                s.student_code,
+                s.prefix_name,
+                s.student_name,
+                s.student_surname,
+                s.faculty_name,
+                s.program_name,
+                s.level_name,
+                GROUP_CONCAT(u.userId SEPARATOR ', ') AS line_user_id
+            FROM students_info s
+            LEFT JOIN apiapp_userprofile u ON u.userLdap = s.student_code
+            WHERE s.student_name LIKE %s
+               OR s.student_surname LIKE %s
+               OR s.student_code LIKE %s
+               OR s.faculty_name LIKE %s
+               OR CONCAT(s.student_name, ' ', s.student_surname) LIKE %s
+            GROUP BY s.student_code, s.prefix_name, s.student_name, s.student_surname,
+                     s.faculty_name, s.program_name, s.level_name
+            ORDER BY s.student_name, s.student_surname
+            LIMIT %s
+        """, (like_query, like_query, like_query, like_query, like_query, limit))
+        results = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return results
+    except mysql.connector.Error as e:
+        print(f"เกิดข้อผิดพลาดในการค้นหานักศึกษา: {e}")
+        return []
+    finally:
+        if connection and connection.is_connected():
+            connection.close()
+
+
 def get_level_detail(level_name, year_filter=None):
     """
     ดึงข้อมูลรายละเอียดของระดับการศึกษาเฉพาะ
