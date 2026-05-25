@@ -1,5 +1,6 @@
 from django import template
 from django.utils.safestring import mark_safe
+from django.utils import timezone as tz
 import locale
 
 THAI_MONTHS = [
@@ -15,6 +16,9 @@ def thai_date(value, show_time=False):
     try:
         if value is None:
             return '—'
+        # แปลง UTC-aware datetime เป็น local time (Asia/Bangkok)
+        if hasattr(value, 'tzinfo') and value.tzinfo is not None:
+            value = tz.localtime(value)
         day = value.day
         month = THAI_MONTHS[value.month]
         year = value.year + 543
