@@ -25,7 +25,7 @@
 | วันที่ | บันทึก | สรุปงาน |
 |---|---|---|
 | 2026-05-07 | [progress-2026-05-07.md](progress-2026-05-07.md) | Sync Monitor, ปรับ sync staff/student, Rewrite Executive Dashboard (Tailwind), ย้ายไป Windows Task Scheduler, Thai date format |
-| 2026-06-07 | [progress-2026-06-07.md](progress-2026-06-07.md) | สร้าง INDEX.md (ดัชนีเอกสาร), ทบทวนสถานะโปรเจกต์ |
+| 2026-06-07 | [progress-2026-06-07.md](progress-2026-06-07.md) | สร้าง INDEX.md (ดัชนีเอกสาร), เพิ่ม `/health/` endpoint (NMS monitoring) |
 
 > งานหลังวันที่ 7 พ.ค. (Search Feature + Timezone Fix ~25 พ.ค.) ยังไม่มี progress log แยก — ดูได้จาก git log
 
@@ -51,6 +51,7 @@
 | Search (Staff/Student + LINE userId) | ✅ | JOIN `apiapp_userprofile` |
 | Sync Monitor | ✅ | UI + manual trigger + history |
 | Auto Sync (Windows Task Scheduler) | ✅ | staff 02:00 / students 02:30 |
+| Health check `/health/` | ✅ | NMS Agent monitoring (JSON 200/503) |
 | PWA + Push Notifications | ✅ | |
 | Export Excel | ✅ | ครบทุกหน้า |
 
@@ -66,4 +67,4 @@
 
 ---
 
-*อัปเดตล่าสุด: 7 มิถุนายน 2569 (สร้าง INDEX.md + progress log)*
+*อัปเดตล่าสุด: 7 มิถุนายน 2569 (สร้าง INDEX.md + progress log + /health/ endpoint)*
