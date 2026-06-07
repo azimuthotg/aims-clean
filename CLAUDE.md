@@ -25,6 +25,7 @@ AIMS (Academic Information Management System) is a Django web application for ac
 
 **Main Routes:**
 ```
+/health/                    → Health check (NMS monitoring, public, JSON {status,db,db_ms}, 200/503)
 /                           → Portal/Login redirect
 /accounts/                  → Authentication System
   ├── login/               → LDAP Login
